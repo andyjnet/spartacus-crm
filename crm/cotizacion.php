@@ -11,11 +11,15 @@ if($cid)
   $cid = base64_decode($cid);
 
 /* Estados/Etapas de Cotizaion */
-$sql = "SELECT id, descripcion FROM etapas_venta WHERE id>0 AND estado=1 ORDER BY orden";
+$sql = "SELECT id, descripcion,
+          (CASE adjunto WHEN true THEN 'si' ELSE 'no' END) AS adjunto
+        FROM etapas_venta
+        WHERE id>0 AND estado=1
+        ORDER BY orden";
 $query = pg_query($conn, $sql);
 ?>
         <!-- fileuploader -->
-        <link href="../js/jquery.fileuploader.css" media="all" rel="stylesheet">
+        <link href="../css/jquery.fileuploader.css" media="all" rel="stylesheet">
         <script>var RutVar=false, SalvarNuevo = 0;</script>     
         <!-- Contenido de la página -->
         <div class="right_col" role="main">
@@ -116,11 +120,11 @@ $query = pg_query($conn, $sql);
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
                           <select id="etapa" class="form-control" required>
-                            <option value="">Seleccione...</option>
+                            <option value="" is-attach="no">Seleccione...</option>
 <?php
 $sel = (pg_numrows($query) == 1)?" selected":"";
 while($row = pg_fetch_assoc($query)) {
-  print "<option value=\"{$row['id']}\"$sel>{$row['descripcion']}</option>";
+  print "<option value=\"{$row['id']}\" is-attach=\"{$row['adjunto']}\"$sel>{$row['descripcion']}</option>";
 }
 /* Sucursales */
 $sql = "SELECT id, descripcion FROM sucursales WHERE id>0 ORDER BY descripcion";
@@ -306,9 +310,16 @@ while($row = pg_fetch_assoc($query)) {
                           <span class="fa fa-shield form-control-feedback right" aria-hidden="true"></span>
                         </div>
                       </div>
+                      <!--
                       <div id="poliza-adjunto" style="display: none;">
                         <h1 style="text-align: center;">subir archivo!</h1>                      
                       </div>
+                      -->
+                      <br />
+                      <h2>Archivos adjuntos</h2>
+                      <div class="ln_solid"></div>
+                      <input type="file" name="files" id="adjunto-file">                      
+                      
                       <div class="ln_solid"></div>
                       <div class="col-md-12 col-sm-12 col-xs-12 text-right">
                         <button type="reset" class="btn btn-default" id="resetFrm">Cancelar</button>
@@ -430,6 +441,7 @@ include('includes/dash-footer.php');
       $("#estado").val('0');       
       $('#frm-cliente').parsley().reset();
       $("div").removeClass("checked");
+      $("#vehiculo").hide();
       if(SalvarNuevo === 0)
         $("#new-client").click();
     });
@@ -545,6 +557,7 @@ include('includes/dash-footer.php');
     }, function(start, end, label) {
         console.log(start.toISOString(), end.toISOString(), label);
     });
+    /*
     $("#poliza").on("change keyup paste mouseup", function() {
       if($(this).val().length >= 5) {
         $("#poliza-adjunto").show();
@@ -552,6 +565,31 @@ include('includes/dash-footer.php');
         $("#poliza-adjunto").hide();
       }
     });
+    */
+    
+    /*** opciones de fileuploader ***/
+		var input = $('input[name="files"]').fileuploader({
+      enableApi: true, 
+			limit	  : 1,
+			extensions: ['jpg', 'jpeg', 'png', 'pdf'],
+			captions: {
+					button: function(options) { return 'Seleccionar ' + (options.limit == 1 ? 'Archivo' : 'Archivos'); },
+					feedback: function(options) { return 'Seleccione ' + (options.limit == 1 ? 'archivo' : 'archivos') + ' a subir'; },
+					feedback2: function(options) { return options.length + ' ' + (options.length > 1 ? ' archivos fueron' : ' archivo fue') + ' seleccionado'; },
+					drop: 'Arrastre los archivos aqui para subirlos',
+					paste: '<div class="fileuploader-pending-loader"><div class="left-half" style="animation-duration: ${ms}s"></div><div class="spinner" style="animation-duration: ${ms}s"></div><div class="right-half" style="animation-duration: ${ms}s"></div></div> Pegando un archivo, click aqui para cancelar.',
+					removeConfirmation: 'Esta seguro que desea borrar este archivo?',
+					errors: {
+						filesLimit: 'Solo ${limit} archivos pueden ser subidos.',
+						filesType: 'solo se permiten archivos de tipo ${extensions}.',
+						fileSize: '${name} es muy grande! Por favor seleccione un archivo no mayor de ${fileMaxSize}MB.',
+						filesSizeAll: 'Los archivos que has seleccionado son muy grandes! solo puede subir archivos hasta ${maxSize} MB.',
+						fileName: 'Archivo con el nombre ${name} ya ha sido seleccionado',
+						folderUpload: 'No esta permitido subir carpeetas.'
+					}
+				}			
+		});
+		window.api = $.fileuploader.getInstance(input);    
 <?php
 if( !isset($NoActivar) || $NoActivar == false ) {
 ?>    
@@ -604,6 +642,8 @@ if( !isset($NoActivar) || $NoActivar == false ) {
     var $myForm = $('#frm-cliente');
     var el = $('#rut').parsley();
     var eRut = false;
+    var eFile = false;
+    var el2 = $("#adjunto-file").parsley();
     if (typeof paramGuardarNuevo === 'undefined') paramGuardarNuevo = 0;
     SalvarNuevo = paramGuardarNuevo;
     el.removeError('forcederror', {updateClass: true});
@@ -616,6 +656,18 @@ if( !isset($NoActivar) || $NoActivar == false ) {
     }
     if(eRut)
       return false;
+    if(api.getFiles().length === 0) {
+      if($("#poliza").val().length >= 5)
+        eFile = true;
+      if($("#etapa").children(":selected").attr("is-attach") == 'si')
+        eFile = true;
+    }
+    el2.removeError('forcederror', {updateClass: true});
+    $(el2.ulError).empty();      
+    if(eFile) {
+      el2.addError('forcederror', {message: 'Debe adjuntar un archivo para continuar'});
+      return false;
+    }    
     if(ruta.checkValidity()) {
       $('#modConfirma').modal({backdrop: "static"});
     } else {
