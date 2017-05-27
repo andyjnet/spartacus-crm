@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"      content="width=device-width, initial-scale=1">
+    <meta name="author" 	   content="Spartacus Group" />
+    <meta name="description"   content="Sistema personalizado para gestion de relacion con los clientes (CRM) y automatizacion de la fuerza de ventas (SFA)" />
+    <meta name="keywords"      content="spartacus,corredores,seguros,SpA,group,crm,sfa,sociedad,por,acciones,asesores,vehiculos,vida,chile" />
+    <meta name="Resource-type" content="Document" />    
+
+    <title>Spartacus group</title>
+    <link rel="shortcut icon" type="image/png" href="images/favicon.png" />
+    
+    <!-- Bootstrap -->
+    <link href="../vendors/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="../vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- Datatables -->
+    <link href="../vendors/datatables.net-bs/css/dataTables.bootstrap.min.css" rel="stylesheet">
+    <link href="../vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css" rel="stylesheet">
+    <link href="../vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css" rel="stylesheet">
+    <link href="../vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css" rel="stylesheet">
+    <link href="../vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css" rel="stylesheet">	
+
+  </head>
+
+  <body class="nav-md">
+	<div class="table-responsive">
+		<button type="button" class="btn btn-default" name="btnTabla" id="btnTabla" onclick="activatbl('#tbl-clientes');">Aplicar</button>
+		<table class="table table-striped jambo_table bulk_action" id="tbl-clientes">
+			<thead>
+				<tr class="headings">
+					<th class="column-title text-left">Rut  </th>
+					<th class="column-title text-left">Nombre </th>
+					<th class="column-title text-left">Telefono </th>
+					<th class="column-title text-left last">Accion</th>
+				</tr>
+			</thead>
+			<tbody>
+					<tr class="even pointer">
+						<td class=" text-left"><strong>4545656</strong></td>
+						<td class=" text-left">ad dbhc dcb g</td>
+						<td class=" text-left">N/A</td>
+						<td class=" text-center">
+							<a href="#"
+								 data-toggle="tooltip"
+								 data-placement="bottom"
+								 title="Click para Editar asdacasd asdas">
+								<i class="fa fa-edit" style="color: green;"></i>
+							</a>
+							&nbsp;&nbsp;
+							<a href="#"
+								 data-toggle="tooltip"
+								 data-placement="bottom"
+								 title="Click para Editar asdacasd asdas">
+								<i class="fa fa-edit" style="color: red;"></i>
+							</a>							
+						</td>				
+					</tr>
+					<tr class="odd pointer">
+						<td class=" text-left"><strong>5566222</strong></td>
+						<td class=" text-left">asdacasd asdas</td>
+						<td class=" text-left">N/A</td>
+						<td class=" text-center">
+							<a href="#"
+								 data-toggle="tooltip"
+								 data-placement="bottom"
+								 title="Click para Editar asdacasd asdas">
+								<i class="fa fa-edit" style="color: green;"></i>
+							</a>
+							&nbsp;&nbsp;
+							<a href="#"
+								 data-toggle="tooltip"
+								 data-placement="bottom"
+								 title="Click para Editar asdacasd asdas">
+								<i class="fa fa-edit" style="color: red;"></i>
+							</a>							
+						</td>
+					</tr>
+			</tbody>
+		</table>
+	</div>
+
+    <!-- jQuery -->
+    <script src="../vendors/jquery/dist/jquery.min.js"></script>     
+    <!-- Bootstrap -->
+    <script src="../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
+    <!-- Datatables -->
+    <script src="../vendors/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="../vendors/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+    <script src="../vendors/datatables.net-buttons/js/dataTables.buttons.min.js"></script>
+    <script src="../vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js"></script>
+    <script src="../vendors/datatables.net-buttons/js/buttons.flash.min.js"></script>
+    <script src="../vendors/datatables.net-buttons/js/buttons.html5.min.js"></script>
+    <script src="../vendors/datatables.net-buttons/js/buttons.print.min.js"></script>
+    <script src="../vendors/datatables.net-fixedheader/js/dataTables.fixedHeader.min.js"></script>
+    <script src="../vendors/datatables.net-keytable/js/dataTables.keyTable.min.js"></script>
+    <script src="../vendors/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
+    <script src="../vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js"></script>
+    <script src="../vendors/datatables.net-scroller/js/dataTables.scroller.min.js"></script>
+    <script src="../vendors/jszip/dist/jszip.min.js"></script>
+    <script src="../vendors/pdfmake/build/pdfmake.min.js"></script>
+    <script src="../vendors/pdfmake/build/vfs_fonts.js"></script>
+
+  </body>
+</html>
+<script>
+  /* Validar campo rut para permitir solo numeros, punto y guion */
+  function validate(evt) {
+     var key = window.event ? evt.keyCode : evt.which;
+     //if (key === 0 || key === 8 || key === 46 || key === 45) {
+     if ([0,8,13,45,46].indexOf(key) > -1) {
+       return true;
+     } else if ( key < 48 || key > 57 ) {
+       return false;
+     } else {
+       return true;
+     }
+  }
+  /* Funcion para activar Tabla dinamica */
+  function activatbl(id_tabla) {
+    $(id_tabla).dataTable({
+      "info"      	 : true,
+      "searching" 	 : true,
+      "ordering"     : true,
+      "lengthChange" : true,
+      language: {
+        paginate: {
+          first:    'Primera',
+          previous: 'Ant.',
+          next:     'Sig.',
+          last:     'Ultima'
+        },
+        "info": "_START_ a _END_ de _TOTAL_",
+        "infoEmpty": "Sin datos para mostrar",
+        "emptyTable": "Sin datos para mostrar en tabla",
+        "lengthMenu": "Mostrar _MENU_ registros"
+      }              
+    });				
+  }
+  /* Validar formulario de registro de Clientes */
+  function validar() {
+    var ruta=document.frm_cliente;
+    var $myForm = $('#frm-cliente');
+    var el = $('#rut').parsley();
+    var eRut = false;
+    el.removeError('forcederror', {updateClass: true});
+    $(el.ulError).empty();       
+    if(!RutVar && $('#rut').val() !== '') {
+      eRut = true;
+      el.addError('forcederror', {message: 'el Rut es incorrecto'});
+      $('#rut').focus();
+      $('#rut').select();
+    }
+    if(eRut)
+      return false;
+    if(ruta.checkValidity()) {
+      $('#modConfirma').modal({backdrop: "static"});
+    } else {
+      $('<input type="submit">').hide().appendTo($myForm).click().remove();		
+    }
+    return false;
+  }
+</script>
