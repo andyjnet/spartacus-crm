@@ -7,20 +7,31 @@ include('../includes/funciones.php');
 include('../includes/conn.php');
 /* parametros get */
 $cid = isset($_GET['cid'])?$_GET['cid']:'';
-if($cid) 
-  $cid = base64_decode($cid);
+if(!$cid = base64_decode($cid, true)) $cid = '';
 
-/* Estados/Etapas de Cotizaion */
-$sql = "SELECT id, descripcion,
-          (CASE adjunto WHEN true THEN 'si' ELSE 'no' END) AS adjunto
-        FROM etapas_venta
-        WHERE id>0 AND estado=1
-        ORDER BY orden";
-$query = pg_query($conn, $sql);
+/* Buscar los datos del cliente */
+if($cid) {
+  $sql = "SELECT c.rut, c.nombre, c.nombre_fantasia,
+            cc.nombre AS contacto,
+            cc.telefono, cc.movil, cc.email
+          FROM clientes c
+            LEFT JOIN clientes_contactos cc ON(cc.idcliente=c.id)
+          WHERE c.id = $cid";
+  $query = pg_query($conn, $sql);
+  if($cliente = pg_fetch_assoc($query)) {
+    $rut      = $cliente['rut'];
+    $nombre   = $cliente['nombre'];
+    $fantasia = $cliente['nombre_fantasia'];
+    $contacto = $cliente['contacto'];
+    $telefono = $cliente['telefono'];
+    $movil    = $cliente['movil'];
+    $email    = $cliente['email'];
+  }
+}
 ?>
         <!-- fileuploader -->
         <link href="../css/jquery.fileuploader.css" media="all" rel="stylesheet">
-        <script>var RutVar=false, SalvarNuevo = 0;</script>     
+        <script>var SalvarNuevo = 0;</script>     
         <!-- Contenido de la página -->
         <div class="right_col" role="main">
           <div class="">
@@ -56,16 +67,18 @@ $query = pg_query($conn, $sql);
                         <div class="col-md-4 col-sm-4 col-xs-12">
                           <input type="text"
                                  class="form-control"
-                                 id="rut" placeholder="RUT"
+                                 id="rut" name="rut"
+                                 placeholder="RUT"
                                  maxlength="12"
+                                 value="<?php print isset($rut)?$rut:'' ?>"
                                  readonly="readonly">
                         </div> 
                         <div class="col-md-6 col-sm-6 col-xs-12">
                           <input type="text"
                                  class="form-control"
-                                 id="cliente"
+                                 id="cliente" name="cliente"
                                  placeholder="Nombre o razon social"
-                                 maxlength="100"
+                                 value="<?php print isset($nombre)?$nombre:'' ?>"
                                  readonly="readonly">
                         </div>                        
                       </div>                   
@@ -74,7 +87,12 @@ $query = pg_query($conn, $sql);
                           Nombre de Fantasia
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                          <input type="text" class="form-control" placeholder="Nombre de fantasia" id="nom-fantasia" readonly="readonly">
+                          <input type="text"
+                                 class="form-control"
+                                 placeholder="Nombre de fantasia"
+                                 id="nom-fantasia" name="nom-fantasia"
+                                 value="<?php print isset($fantasia)?$fantasia:'' ?>"
+                                 readonly="readonly">
                         </div>
                       </div>
                       <div class="form-group" id="nombre-fantasia">
@@ -82,7 +100,10 @@ $query = pg_query($conn, $sql);
                           Contacto
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                          <input type="text" class="form-control" placeholder="Persona de contacto" id="nom-contacto">
+                          <input type="text" class="form-control"
+                                 placeholder="Persona de contacto"
+                                 value="<?php print isset($contacto)?$contacto:'' ?>"
+                                 id="nom-contacto" name="nom-contacto">
                         </div>
                       </div>
                       <div class="form-group">
@@ -90,14 +111,20 @@ $query = pg_query($conn, $sql);
                           Tel&eacute;fono <span class="required">*</span>
                         </label>
                         <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
-                          <input type="text" class="form-control" id="telefono" placeholder="Telefono fijo">
+                          <input type="text" class="form-control"
+                                 id="telefono" name="telefono"
+                                 value="<?php print isset($telefono)?$telefono:'' ?>"
+                                 placeholder="Telefono fijo">
                           <span class="fa fa-phone form-control-feedback right" aria-hidden="true"></span>
                         </div>
                           <label class="control-label col-md-2 col-sm-2 col-xs-12" for="movil">
                           M&oacute;vil <span class="required">*</span>
                         </label>
                         <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
-                          <input type="text" class="form-control" id="movil" placeholder="Movil">
+                          <input type="text" class="form-control"
+                                 id="movil" name="movil"
+                                 value="<?php print isset($movil)?$movil:'' ?>"
+                                 placeholder="Movil">
                           <span class="fa fa-phone form-control-feedback right" aria-hidden="true"></span>
                         </div>
                       </div>
@@ -106,7 +133,11 @@ $query = pg_query($conn, $sql);
                           Email <span class="required">*</span>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12 has-feedback">
-                          <input type="email" data-parsley-trigger="change" class="form-control" id="email" placeholder="Email de contacto">
+                          <input type="email" data-parsley-trigger="change"
+                                 class="form-control"
+                                 id="email" name="email"
+                                 value="<?php print isset($email)?$email:'' ?>"
+                                 placeholder="Email de contacto">
                           <span class="fa fa-envelope form-control-feedback right" aria-hidden="true"></span>
                         </div>                        
                       </div>
@@ -119,9 +150,16 @@ $query = pg_query($conn, $sql);
                           Estado/Etapa <span class="required">*</span>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
-                          <select id="etapa" class="form-control" required>
+                          <select id="etapa" name="etapa" class="form-control" required>
                             <option value="" is-attach="no">Seleccione...</option>
 <?php
+/* Estados/Etapas de Cotizaion  */
+$sql = "SELECT id, descripcion,
+          (CASE adjunto WHEN true THEN 'si' ELSE 'no' END) AS adjunto
+        FROM etapas_venta
+        WHERE id>0 AND estado=1
+        ORDER BY orden";
+$query = pg_query($conn, $sql);
 $sel = (pg_numrows($query) == 1)?" selected":"";
 while($row = pg_fetch_assoc($query)) {
   print "<option value=\"{$row['id']}\" is-attach=\"{$row['adjunto']}\"$sel>{$row['descripcion']}</option>";
@@ -138,7 +176,7 @@ $query = pg_query($conn, $sql);
                           Sucursal <span class="required">*</span>
                         </label>
                         <div class="col-md-4 col-sm-4 col-xs-12">
-                          <select id="sucursal" class="form-control" required>
+                          <select id="sucursal" name="sucursal" class="form-control" required>
                             <option value="">Seleccione...</option>
 <?php
 $sel = (pg_numrows($query) == 1)?" selected":"";
@@ -155,7 +193,7 @@ $query = pg_query($conn, $sql);
                           Corredor <span class="required">*</span>
                         </label>
                         <div class="col-md-4 col-sm-4 col-xs-12">
-                          <select id="corredor" class="form-control" required>
+                          <select id="corredor" name="corredor" class="form-control" required>
                             <option value="">Seleccione...</option>
 <?php
 $sel = (pg_numrows($query) == 1)?" selected":"";
@@ -171,7 +209,7 @@ while($row = pg_fetch_assoc($query)) {
                           Ejecutivo <span class="required">*</span>
                         </label>
                         <div class="col-md-4 col-sm-4 col-xs-12">
-                          <select id="ejecutivo" class="form-control" required>
+                          <select id="ejecutivo" name="ejecutivo" class="form-control" required>
                             <option value="">Seleccione...</option>
 <?php
 $sql = "SELECT id, CONCAT(nombre, ' ', apellidos) AS descripcion FROM usuarios WHERE estado=1 ORDER BY nombre";
@@ -190,7 +228,7 @@ $query = pg_query($conn, $sql);
                           Ramo <span class="required">*</span>
                         </label>
                         <div class="col-md-4 col-sm-4 col-xs-12">
-                          <select id="ramo" class="form-control" required>
+                          <select id="ramo" name="ramo" class="form-control" required>
                             <option value="">Seleccione...</option>
 <?php
 $sel = (pg_numrows($query) == 1)?" selected":"";
@@ -204,33 +242,33 @@ while($row = pg_fetch_assoc($query)) {
                       <div id="vehiculo" style="display: none">
                         <div class="form-group">
                           <label class="control-label col-md-2 col-sm-2 col-xs-12" for="patente">
-                            Patente <span class="required">*</span>
+                            Patente 
                           </label>
                           <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
-                            <input type="text" class="form-control" id="patente" placeholder="Nro de patente de vehiculo">
+                            <input type="text" class="form-control" id="patente" name="patente" placeholder="Nro de patente de vehiculo">
                             <span class="fa fa-car form-control-feedback right" aria-hidden="true"></span>
                           </div>
                             <label class="control-label col-md-2 col-sm-2 col-xs-12" for="marca">
-                            Marca <span class="required">*</span>
+                            Marca 
                           </label>
                           <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
-                            <input type="text" class="form-control" id="marca" placeholder="Marca">
+                            <input type="text" class="form-control" id="marca" name="marca" placeholder="Marca">
                             <span class="fa fa-car form-control-feedback right" aria-hidden="true"></span>
                           </div>
                         </div>                        
                         <div class="form-group">
                           <label class="control-label col-md-2 col-sm-2 col-xs-12" for="modelo">
-                            Modelo <span class="required">*</span>
+                            Modelo 
                           </label>
                           <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
-                            <input type="text" class="form-control" id="modelo" placeholder="Modelo de vehiculo">
+                            <input type="text" class="form-control" id="modelo" name="modelo" placeholder="Modelo de vehiculo">
                             <span class="fa fa-car form-control-feedback right" aria-hidden="true"></span>
                           </div>
                             <label class="control-label col-md-2 col-sm-2 col-xs-12" for="year">
-                            A&ntilde;o <span class="required">*</span>
+                            A&ntilde;o 
                           </label>
                           <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
-                            <input type="text" class="form-control" id="year" placeholder="Año de vehiculo">
+                            <input type="text" class="form-control" id="year" name="year" placeholder="Año de vehiculo">
                             <span class="fa fa-car form-control-feedback right" aria-hidden="true"></span>
                           </div>
                         </div>  
@@ -240,14 +278,16 @@ while($row = pg_fetch_assoc($query)) {
                           Siniestros 
                         </label>
                         <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
-                          <input type="text" class="form-control" id="siniestros" placeholder="Monto siniestros causados">
+                          <input type="text" class="form-control" id="siniestros" name="siniestros"
+                                 placeholder="Monto siniestros causados">
                           <span class="fa fa-dollar form-control-feedback right" aria-hidden="true"></span>
                         </div>
                           <label class="control-label col-md-2 col-sm-2 col-xs-12" for="prima">
                           Prima actual 
                         </label>
                         <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
-                          <input type="text" class="form-control" id="prima" placeholder="Monto prima actual">
+                          <input type="text" class="form-control" id="prima" name="prima"
+                                 placeholder="Monto prima actual">
                           <span class="fa fa-dollar form-control-feedback right" aria-hidden="true"></span>
                         </div>
                       </div>
@@ -256,14 +296,16 @@ while($row = pg_fetch_assoc($query)) {
                           Prima Neta 
                         </label>
                         <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
-                          <input type="text" class="form-control" id="prima-neta" placeholder="Monto prima neta">
+                          <input type="text" class="form-control" id="prima-neta" name="prima-neta"
+                                 placeholder="Monto prima neta">
                           <span class="fa fa-dollar form-control-feedback right" aria-hidden="true"></span>
                         </div>
                           <label class="control-label col-md-2 col-sm-2 col-xs-12" for="monto-asegurado">
                           Monto Asegurado 
                         </label>
                         <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
-                          <input type="text" class="form-control" id="monto-asegurado" placeholder="Monto asegurado">
+                          <input type="text" class="form-control" id="monto-asegurado" name="monto-asegurado"
+                                 placeholder="Monto asegurado">
                           <span class="fa fa-dollar form-control-feedback right" aria-hidden="true"></span>
                         </div>
                       </div>
@@ -274,7 +316,7 @@ while($row = pg_fetch_assoc($query)) {
                           <div class="control-group">
                             <div class="controls">
                               <div class="col-md-4 col-sm-4 col-xs-12 xdisplay_inputx form-group has-feedback">
-                                <input type="text" class="form-control" id="vigencia" placeholder="Vigencia" aria-describedby="inputSuccess2Status">
+                                <input type="text" class="form-control" id="vigencia" name="vigencia" placeholder="Vigencia" aria-describedby="inputSuccess2Status">
                                 <span class="fa fa-calendar-o form-control-feedback right" aria-hidden="true"></span>
                                 <span id="inputSuccess2Status" class="sr-only">(Exito)</span>
                               </div>
@@ -286,7 +328,7 @@ while($row = pg_fetch_assoc($query)) {
                           <div class="control-group">
                             <div class="controls">
                               <div class="col-md-4 col-sm-4 col-xs-12 xdisplay_inputx form-group has-feedback">
-                                <input type="text" class="form-control" id="renovacion" placeholder="Renovacion" aria-describedby="inputSuccess2Status">
+                                <input type="text" class="form-control" id="renovacion" name="renovacion" placeholder="Renovacion" aria-describedby="inputSuccess2Status">
                                 <span class="fa fa-calendar-o form-control-feedback right" aria-hidden="true"></span>
                                 <span id="inputSuccess2Status" class="sr-only">(Exito)</span>
                               </div>
@@ -306,7 +348,8 @@ while($row = pg_fetch_assoc($query)) {
                           N&ordm; de poliza 
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12 has-feedback">
-                          <input type="text" class="form-control" id="poliza" placeholder="Numero de poliza">
+                          <input type="text" class="form-control" id="poliza"
+                                 name="poliza" placeholder="Numero de poliza">
                           <span class="fa fa-shield form-control-feedback right" aria-hidden="true"></span>
                         </div>
                       </div>
@@ -347,7 +390,14 @@ while($row = pg_fetch_assoc($query)) {
                         </div>
                       </div>
                       <!--/ Dialogo Modal de confirmacion -->
-                      <input type="hidden" id="idcotizacion" value="0">
+                      <input type="hidden" id="idcotizacion" name="idcotizacion" value="0">
+<?php
+if($cid) {
+?>
+                      <input type="hidden" id="idcliente" name="idcliente" value="<?php print $cid ?>">
+<?php
+}
+?>
                     </form>
                   </div>
                 </div>
@@ -372,9 +422,9 @@ while($row = pg_fetch_assoc($query)) {
                     <!-- tabla dinamica -->
                     <div id="historial" class="clearfix">
 <?php
-$clientes = 1;
+$cotizaciones = 1;
 include("ajax/tabla_cotizacion.php");
-unset($clientes);
+unset($cotizaciones);
 ?>
                     </div>
                     <!--/ tabla dinamica --> 
@@ -415,24 +465,14 @@ unset($clientes);
 include('includes/dash-footer.php');
 @pg_close($conn);
 ?>
-<!-- Validacion de RUT Chileno -->
-<script src="../js/jquery.Rut.js" type="text/javascript"></script>
 <!-- fileuploader -->
 <script src="../js/jquery.fileuploader.min.js" type="text/javascript"></script>
 <script>
   $(document).ready(function() {
-    $("#rut").keypress(validate);
-    $('#rut').Rut({
-      on_error  : function() { RutVar = false; },
-      on_success: function() { RutVar = true; }
-    });
-    $("#new-client").click(function() {
+    $("#cierra-frm").click(function() {
       $("#div-frm").toggle();
       if($("#div-frm").is(":hidden"))
         $("html, body").animate({ scrollTop: 0 }, "slow");
-    });
-    $("#cierra-frm").click(function() {
-      $("#new-client").click();
     });
     $("#resetFrm").click(function() {
       $("#ejecutivo").children().attr('selected', false);
@@ -443,33 +483,24 @@ include('includes/dash-footer.php');
       $("div").removeClass("checked");
       $("#vehiculo").hide();
       if(SalvarNuevo === 0)
-        $("#new-client").click();
+        $("#cierra-frm").click();
     });
     $("#btnGuardar").click(function() {
+      var form_data = new FormData( $("#frm-cliente")[0] );
       $("#modConfirma").modal('hide');
+      
       $.ajax({type: 'POST',
         url: "ajax/tabla_cotizacion.php",
-        async: false,
+        async      : false,
+				cache      : false,
+				contentType: false,
+				processData: false,        
         /* Mostrar splash de espera mientras llega respuesta del script php */
-        beforeSend:
+        beforeSend: 
           function() {
             $.showLoading({name: 'jump-pulse',allowHide: false});
           },
-        data: {
-            'tipo'        : $("#frm-cliente input[type='radio']:checked").val(),
-            'rut'         : document.getElementById("rut").value,
-            'nombre'      : document.getElementById("nombre").value,
-            'fantasia'    : document.getElementById("nom_fantasia").value,
-            'ejecutivo'   : document.getElementById("ejecutivo").value,
-            'comentarios' : document.getElementById("comentarios").value,
-            'estado'      : document.getElementById("estado").value,
-            'contacto'    : document.getElementById("contacto").value,
-            'telefono'    : document.getElementById("telefono").value,
-            'movil'       : document.getElementById("movil").value,
-            'email'       : document.getElementById("email").value,
-            'direccion'   : document.getElementById("direccion").value,
-            'idcliente'   : document.getElementById("idcliente").value
-            },
+        data: form_data,
         /* Colocar respuesta del script php en el marco DIV indicado */
         success:
           function(result){
@@ -482,6 +513,10 @@ include('includes/dash-footer.php');
               $( "#rut" ).focus();
               $("html, body").animate({ scrollTop: 0 }, "slow");
             }
+          },
+        error:
+          function(result){
+            alert("Error de Ajax: "+result);
           }
       });
     });
@@ -591,7 +626,7 @@ include('includes/dash-footer.php');
 		});
 		window.api = $.fileuploader.getInstance(input);    
 <?php
-if( !isset($NoActivar) || $NoActivar == false ) {
+if( !isset($NoActivar) || !$NoActivar ) {
 ?>    
     /* Activamos la tabla dinamica una vez que haya cargado la pagina */
     activatbl("#tbl-clientes");
@@ -599,19 +634,7 @@ if( !isset($NoActivar) || $NoActivar == false ) {
 }
 ?>
   });
-  /* Validar campo rut para permitir solo numeros, punto y guion */
-  function validate(evt) {
-     var key = window.event ? evt.keyCode : evt.which;
-     //if (key === 0 || key === 8 || key === 46 || key === 45) {
-     if ([0,8,13,45,46,75,107].indexOf(key) > -1) {
-       if((key == 75 || key == 107) && $("#rut").val().toUpperCase().indexOf("K")  > -1) return false;
-       return true;
-     } else if ( key < 48 || key > 57 ) {
-       return false;
-     } else {
-       return true;
-     }
-  }
+  
   /* Funcion para activar Tabla dinamica */
   function activatbl(id_tabla) {
     $(id_tabla).dataTable({
@@ -636,26 +659,14 @@ if( !isset($NoActivar) || $NoActivar == false ) {
       }              
     });				
   }
-  /* Validar formulario de registro de Clientes */
+  /* Validar formulario de registro de Cotizaciones */
   function validar(paramGuardarNuevo) {
     var ruta=document.frm_cliente;
     var $myForm = $('#frm-cliente');
-    var el = $('#rut').parsley();
-    var eRut = false;
     var eFile = false;
     var el2 = $("#adjunto-file").parsley();
     if (typeof paramGuardarNuevo === 'undefined') paramGuardarNuevo = 0;
     SalvarNuevo = paramGuardarNuevo;
-    el.removeError('forcederror', {updateClass: true});
-    $(el.ulError).empty();       
-    if(!RutVar && $('#rut').val() !== '') {
-      eRut = true;
-      el.addError('forcederror', {message: 'el Rut es incorrecto'});
-      $('#rut').focus();
-      $('#rut').select();
-    }
-    if(eRut)
-      return false;
     if(api.getFiles().length === 0) {
       if($("#poliza").val().length >= 5)
         eFile = true;
