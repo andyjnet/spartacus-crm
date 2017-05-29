@@ -8,6 +8,41 @@ if(!isset($cotizaciones)) {
 	include('../../includes/funciones.php');
 	include('../../includes/conn.php');
 }
+//-- Clase para manipulacion de adjuntos
+if(!empty($_FILES) && $_FILES['files']['tmp_name']) {
+    include('../../includes/class.fileuploader.php');
+    // initialize the FileUploader
+    $FileUploader = new FileUploader('files', array(
+        // Options will go here
+    ));
+    // call to upload the files
+    $upload = $FileUploader->upload();
+	if($upload['isSuccess']) {
+		// get the uploaded files
+		$files = $upload['files'];
+		$file_ruta 			  = $files[0]['file'];
+		$file_nombre		  = $files[0]['name'];
+		$file_anterior		  = $files[0]['old_name'];
+		$file_anterior_titulo = $files[0]['old_title'];
+		$file_size_bytes	  = $files[0]['size'];
+		$file_size_text		  = $files[0]['size2'];
+		$file_titulo		  = $files[0]['title'];
+		$file_extension		  = $files[0]['extension'];
+		$file_tipo			  = $files[0]['type'];
+		
+	}
+	if($upload['hasWarnings']) {
+		// get the warnings
+		$warnings = $upload['warnings'];
+	};
+	
+	// manipular error
+	if(isset($warnings)) {
+		print_r($warnings);
+		exit;		
+	}	
+}
+//-- Lista de variables
 $idcotizacion 	 = isset($_POST['idcotizacion'])?$_POST['idcotizacion']:0;
 $idcliente	   	 = isset($_POST['idcliente'])?$_POST['idcliente']:0;
 $rut 	 	  	 = isset($_POST['rut'])?$_POST['rut']:'';
@@ -59,10 +94,13 @@ try  {
   $renovacion = "2017-01-01";
 }
 
+//-- En caso de eliminacion de registro
 if($id_eliminar) {
+	$eliminado = true;
 	$sql   = "DELETE FROM cotizacion WHERE id=$id_eliminar";
-	$query = pg_query($conn, $sql);
-
+	if(!$query = pg_query($conn, $sql)) {
+		$eliminado = false;
+	}	
 }
 
 //-- Iniciamos transaccion
@@ -99,9 +137,9 @@ if($rut && !$idcotizacion) {
 				,prima_neta = $prima_neta
 				,monto_asegurado = $monto_asegurado
 				,comision = $comision
-				,observacion = '$comentarios'::text,
-				poliza = '$poliza'
-				,idetapa = $etapa,
+				,observacion = '$comentarios'::text
+				,poliza = '$poliza'
+				,idetapa = $etapa
 				,idusuario_mod = $idusuario
 				,fecha_mod = NOW()
 			WHERE id = $idcotizacion
@@ -116,7 +154,7 @@ if($rut && !$idcotizacion) {
 if($sw) {
 	$tran = pg_query($conn, $sql);
 	if($fila = pg_fetch_assoc($tran)) {
-		$id=$fila['id'];
+		$idcotizacion = $fila['id'];
 		if($idcliente) {
 			$sql  = "DELETE FROM clientes_contactos WHERE idcliente = $idcliente";
 			$tran = pg_query($conn, $sql);
@@ -138,7 +176,25 @@ if($sw) {
 				$str_error = "La cotizaci&oacute;n no se ha podido actualizar, intente mas tarde";
 			}			
 		}
-
+		//-- bof Manipulacion de adjuntos
+		if(isset($files)) {
+			$sql = "DELETE FROM adjuntos
+					WHERE modulo='cotizacion'
+						AND idmodulo=$idcotizacion
+						AND idinterno=$etapa";
+			if(!$tran = pg_query($conn, $sql))
+				$str_error = "Ha ocurrido un problema actualizando el adjunto";
+			$sql = "INSERT INTO adjuntos(modulo, idmodulo, idinterno, ruta, nombre,
+						anterior, anterior_titulo, size_bytes, size_text,
+						titulo, extension, tipo, idusuario)
+					VALUES('cotizacion', $idcotizacion, $etapa, '$file_ruta', '$file_nombre',
+						'$file_anterior', '$file_anterior_titulo', '$file_size_bytes', '$file_size_text',
+						'$file_titulo', '$file_extension', '$file_tipo', $idusuario)
+					RETURNING id";
+			if(!$tran = pg_query($conn, $sql))
+				$str_error = "Ha ocurrido un problema agregando el archivo adjunto";
+		}
+		//-- eof Manipulacion de adjuntos
 		if(!isset($str_error))
 			$str_bien = "La cotizaci&oacute;n se ha $texto correctamente!";
 	} else {
@@ -263,7 +319,7 @@ while($fila = pg_fetch_assoc($query)) {
 <?php
 if(!isset($cotizaciones) && !$id_eliminar)
 	print '$( "#resetFrm" ).trigger( "click" );'.PHP_EOL;
-if(isset($str_bien) || $id_eliminar) {
+if(isset($str_bien) || ($id_eliminar && $eliminado)) {
 	$str_bien = $id_eliminar?"El registro se ha eliminado correctamente":$str_bien;
 ?>
 	/* Notificacion exitosa */

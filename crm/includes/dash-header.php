@@ -4,6 +4,10 @@ session_start();
 if(!isset($_SESSION['usuario'])) {
 	header("location: ../page_403.html");
 }
+$username	= $_SESSION['usuario'];
+$idusuario	= $_SESSION['uid'];
+$usr_nombre	= $_SESSION['nombre'];
+$usr_admin	= $_SESSION['admin'];
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -158,7 +162,7 @@ if(isset($notify)) {
               <ul class="nav navbar-nav navbar-right">
                 <li class="">
                   <a href="javascript:;" class="user-profile dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-                    Nombre de Usuario
+                    <?php print $usr_nombre ?>
                     <span class=" fa fa-angle-down"></span>
                   </a>
                   <ul class="dropdown-menu dropdown-usermenu pull-right">

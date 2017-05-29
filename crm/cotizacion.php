@@ -362,7 +362,8 @@ while($row = pg_fetch_assoc($query)) {
                       <h2>Archivos adjuntos</h2>
                       <div class="ln_solid"></div>
                       <input type="file" name="files" id="adjunto-file">                      
-                      
+                      <div id="tabla-adjuntos"></div>
+          
                       <div class="ln_solid"></div>
                       <div class="col-md-12 col-sm-12 col-xs-12 text-right">
                         <button type="reset" class="btn btn-default" id="resetFrm">Cancelar</button>
@@ -512,7 +513,7 @@ include('includes/dash-footer.php');
               SalvarNuevo = 0;
               $( "#rut" ).focus();
               $("html, body").animate({ scrollTop: 0 }, "slow");
-            }
+            } 
           },
         error:
           function(result){
@@ -592,15 +593,6 @@ include('includes/dash-footer.php');
     }, function(start, end, label) {
         console.log(start.toISOString(), end.toISOString(), label);
     });
-    /*
-    $("#poliza").on("change keyup paste mouseup", function() {
-      if($(this).val().length >= 5) {
-        $("#poliza-adjunto").show();
-      } else {
-        $("#poliza-adjunto").hide();
-      }
-    });
-    */
     
     /*** opciones de fileuploader ***/
 		var input = $('input[name="files"]').fileuploader({
@@ -630,6 +622,11 @@ if( !isset($NoActivar) || !$NoActivar ) {
 ?>    
     /* Activamos la tabla dinamica una vez que haya cargado la pagina */
     activatbl("#tbl-clientes");
+<?php
+}
+if($cid) {
+?>
+    $("#div-frm").show();
 <?php
 }
 ?>
@@ -709,7 +706,7 @@ if( !isset($NoActivar) || !$NoActivar ) {
           $.showLoading({name: 'jump-pulse',allowHide: false});			
         },
       data: {
-          'objeto': 'cliente',
+          'objeto': 'cotizacion',
           'id'    : id
         },
       //-- Colocar respuesta del script php en el marco DIV indicado
@@ -722,11 +719,7 @@ if( !isset($NoActivar) || !$NoActivar ) {
         }
     });     
   }
-<?php
-if($cid) {
-?>
-  $("#div-frm").show();
-<?php
-}
-?>
+  function downloadFile(idfile) {
+    window.location.href = "descargar.php?idfile="+idfile;
+  }
 </script>
