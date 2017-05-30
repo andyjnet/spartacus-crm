@@ -196,7 +196,7 @@ switch($objeto) {
 $sql = "SELECT a.id AS idfile, a.ruta, a.anterior,
 			e.descripcion AS etapa,
 			a.size_text AS size,
-			a.fecha_reg
+			to_char(a.fecha_reg, 'DD/MM/YYYY HH24:MI:SS') AS fecha_reg
 		FROM adjuntos a
 			LEFT JOIN etapas_venta e ON(a.idinterno = e.id)
 		WHERE modulo = 'cotizacion'
@@ -206,7 +206,7 @@ $query = pg_query($conn, $sql);
 if(pg_num_rows($query) > 0) {
     $html = '$("#tabla-adjuntos").html(\'
     <div class="table-responsive">
-      <table class="table table-striped jambo_table bulk_action" id="tbl-clientes">
+      <table class="table table-striped jambo_table bulk_action" id="tbl-adjuntos">
         <thead>
           <tr class="headings">
           <th class="column-title text-left">Archivo  </th>
@@ -235,10 +235,10 @@ while($fila = pg_fetch_assoc($query)) {
 				<i class="fa fa-download"></i>
 			</a>        
 			&nbsp;&nbsp;
-            <a href="#"
+            <a href="javascript:void(0)"
 			   data-toggle="tooltip" data-placement="bottom"
 			   title="Click para eliminar Documento: '.$fila['anterior'].'"
-			   onclick="">
+			   onclick="deleteFile('.$fila['idfile'].');">
 				<i class="fa fa-remove" style="color: red;"></i>
 			</a>			
         </td>

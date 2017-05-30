@@ -13,4 +13,14 @@ function txt_log($texto) {
         file_put_contents($file, $log);   
     }
 }
+
+//-- Dar formato a fecha
+function fec_to_format($fecha, $formato) {
+    $dateObj = \DateTime::createFromFormat($formato, $fecha);
+    if (!$dateObj) {
+        throw new \Exception("Error con el formato para el valor: '$fecha'");
+    } 
+    $dateUS = $dateObj->format('Y-m-d');
+    return $dateUS;
+}
 ?>

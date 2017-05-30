@@ -722,4 +722,33 @@ if($cid) {
   function downloadFile(idfile) {
     window.location.href = "descargar.php?idfile="+idfile;
   }
+  function deleteFile(idfile) {
+    if(!confirm("Desea Eliminar el archivo?"))
+      return;
+    $.ajax({type: 'POST',
+      url: "ajax/borrarfile.php",
+      async: false,
+      //-- Mostrar icono de espera mientras llega respuesta del script php
+      beforeSend:
+        function() {
+          $.showLoading({name: 'jump-pulse',allowHide: false});			
+        },
+      data: {
+          'id'      : idfile,
+          'modulo'  : 'cotizacion',
+          'idmodulo': $("#idcotizacion").val()
+        },
+      //-- Colocar respuesta del script php en el marco DIV indicado
+      success:
+        function(result){
+          $("#tabla-adjuntos").html(result);
+          $.hideLoading();
+        },
+      error:
+        function(result){
+          $.hideLoading();
+          ("#tabla-adjuntos").html('Error con Ajax:'+result);
+        }
+    });    
+  }
 </script>

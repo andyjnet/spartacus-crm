@@ -178,12 +178,14 @@ if($sw) {
 		}
 		//-- bof Manipulacion de adjuntos
 		if(isset($files)) {
+			/* No hace falta borrar adjuntos relacionados a la misma cotizacion
 			$sql = "DELETE FROM adjuntos
 					WHERE modulo='cotizacion'
 						AND idmodulo=$idcotizacion
 						AND idinterno=$etapa";
 			if(!$tran = pg_query($conn, $sql))
 				$str_error = "Ha ocurrido un problema actualizando el adjunto";
+			*/
 			$sql = "INSERT INTO adjuntos(modulo, idmodulo, idinterno, ruta, nombre,
 						anterior, anterior_titulo, size_bytes, size_text,
 						titulo, extension, tipo, idusuario)
@@ -299,7 +301,7 @@ while($fila = pg_fetch_assoc($query)) {
 				<i class="fa fa-edit" style="color: green;"></i>
 			</a>
 			&nbsp;&nbsp;
-			<a href="#"
+			<a href="javascript:void(0)"
 			   data-toggle="tooltip" data-placement="bottom"
 			   title="Click para eliminar registro"
 			   onclick="fn_elimina(<?php print $fila['id'] ?>,'<?php print $fila['nombre'] ?>');">
