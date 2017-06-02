@@ -105,12 +105,16 @@ if(isset($str_bien)) {
 	pg_query($conn, "ROLLBACK");
 }
 
-$sql = "SELECT id, rut,
-			CONCAT(nombre, ' ', apellidos) AS nombre,
-			telefono, movil, email
-		FROM usuarios
-		WHERE id>0
-		ORDER BY nombre, rut";
+$sql = "SELECT u.id, u.rut,
+			CONCAT(u.nombre, ' ', u.apellidos) AS nombre,
+			u.telefono, u.movil, u.email,
+			c.descripcion AS cargo,
+			s.descripcion AS sucursal
+		FROM usuarios u
+			LEFT JOIN cargos c ON(u.idcargo=c.id)
+			LEFT JOIN sucursales s ON(u.idsucursal = s.id)
+		WHERE u.id>0
+		ORDER BY u.nombre, u.apellidos";
 $query = pg_query($conn, $sql);
 ?>
 <div class="table-responsive">
@@ -121,6 +125,8 @@ $query = pg_query($conn, $sql);
 		<th class="column-title text-left">Nombre </th>
 		<th class="column-title text-left">Tel&eacute;fono </th>
 		<th class="column-title text-left">Email </th>
+		<th class="column-title text-left">Cargo </th>
+		<th class="column-title text-left">Sucursal </th>
 		<th class="column-title no-link last text-center"><span class="nobr">Acci&oacute;n</span>
 		</th>
 	  </tr>
@@ -132,7 +138,7 @@ if(pg_num_rows($query) == 0) {
 	$NoActivar = true;
 ?>
 	  <tr class="even pointer">
-		<td class="text-center" colspan="5">No hay ejecutivos registrados! Haga click en Nuevo para agregar el primero</td>
+		<td class="text-center" colspan="7">No hay ejecutivos registrados! Haga click en Nuevo para agregar el primero</td>
 	  </tr>
 <?php
 }
@@ -154,6 +160,8 @@ while($fila = pg_fetch_assoc($query)) {
         <td class=" text-left"><?php print $fila['nombre'] ?></td>
 		<td class=" text-left"><?php print $telefono ?></td>
 		<td class=" text-left"><?php print $fila['email'] ?></td>
+		<td class=" text-left"><?php print $fila['cargo'] ?></td>
+		<td class=" text-left"><?php print $fila['sucursal'] ?></td>
 		<td class=" last text-center">
 			<a href="#"
 			   data-toggle="tooltip"

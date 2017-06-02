@@ -226,13 +226,16 @@ $sql = "SELECT p.id,
 			   ev.descripcion AS etapa,
 			   p.prima_neta,
 			   to_char(p.vigencia,'DD/MM/YYYY') AS vigencia,
-			   u.nombre AS ejecutivo
+			   u.nombre AS ejecutivo,
+			   cv.patente, p.item
 		FROM cotizacion p
 			INNER JOIN clientes c ON(p.idcliente = c.id)
 			INNER JOIN ramos r ON(p.idramo = r.id)
 			INNER JOIN etapas_venta ev ON(p.idetapa = ev.id)
 			INNER JOIN usuarios u ON(p.idejecutivo = u.id)
 			LEFT JOIN clientes_contactos cc ON(cc.idcliente = c.id)
+			LEFT JOIN cotizacion_vehiculos cv ON(cv.idcotizacion = p.id)
+		WHERE p.idejecutivo = $idusuario OR 1 = $usr_admin
 		ORDER BY 1";
 $query = pg_query($conn, $sql);
 ?>
@@ -240,9 +243,10 @@ $query = pg_query($conn, $sql);
   <table class="table table-striped jambo_table bulk_action" id="tbl-clientes">
 	<thead>
 	  <tr class="headings">
-		<th class="column-title text-left">Nombre  </th>
-		<th class="column-title text-left">Email/Tlf </th>
-		<th class="column-title text-left">Concepto </th>
+		<th class="column-title text-left">ID</th>
+		<th class="column-title text-left">Cliente</th>
+		<th class="column-title text-left">Patente </th>
+		<th class="column-title text-left">Item </th>
 		<th class="column-title text-left">Etapa </th>
 		<th class="column-title text-left">Monto </th>
 		<th class="column-title text-left">Vigencia </th>
@@ -258,7 +262,7 @@ if(pg_num_rows($query) == 0) {
 	$NoActivar = true;
 ?>
 	  <tr class="even pointer">
-		<td class="text-center" colspan="8">No hay cotizaciones registradas! Busque un cliente y cree la primera</td>
+		<td class="text-center" colspan="9">No hay cotizaciones registradas! Busque un cliente y cree la primera</td>
 	  </tr>
 <?php
 }
@@ -284,9 +288,10 @@ while($fila = pg_fetch_assoc($query)) {
 		$contacto = ($telefono)?$telefono:$email;
 ?>
       <tr class="<?php print $clase ?>">
+	    <td class=" text-left"><strong><?php print  sprintf("%04d", $fila['id']); ?></strong></td>
         <td class=" text-left"><strong><?php print  $fila['nombre'] ?></strong></td>
-        <td class=" text-left"><?php print $contacto ?></td>
-		<td class=" text-left"><?php print $fila['ramo'] ?></td>
+        <td class=" text-left"><?php print $fila['patente'] ?></td>
+		<td class=" text-left"><?php print $fila['item'] ?></td>
 		<td class=" text-left"><?php print $fila['etapa'] ?></td>
 		<td class=" text-left"><?php print number_format($fila['prima_neta'], 2, ',', '.') ?></td>
 		<td class=" text-left"><?php print $fila['vigencia'] ?></td>

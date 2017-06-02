@@ -5,9 +5,6 @@ $notify    = 1;
 include('includes/dash-header.php');
 include('../includes/funciones.php');
 include('../includes/conn.php');
-//-- Fases/Estados de clientes
-$sql = "SELECT id, descripcion FROM clientes_fases ORDER BY descripcion";
-$query = pg_query($conn, $sql);
 ?>
         <script>var RutVar=false, SalvarNuevo = 0;</script>
         <!-- Contenido de la página -->
@@ -79,7 +76,22 @@ $query = pg_query($conn, $sql);
                         <div class="col-md-4 col-sm-4 col-xs-12">
                           <select id="ejecutivo" class="form-control" required>
                             <option value="">Seleccione...</option>
-                            <option value="1">Nombre Apellido</option>
+<?php
+$sql = "SELECT id, CONCAT(nombre, ' ', apellidos) AS descripcion
+        FROM usuarios
+        WHERE estado=1
+          AND idcargo > 0
+        ORDER BY nombre, apellidos";
+$query = pg_query($conn, $sql);
+$sel = (pg_numrows($query) == 1)?" selected":"";
+while($row = pg_fetch_assoc($query)) {
+  if($cid && !$sel && $row['id'] == $idusuario) $sel = " selected";
+  print "<option value=\"{$row['id']}\"$sel>{$row['descripcion']}</option>";
+}
+//-- Fases/Estados de clientes
+$sql = "SELECT id, descripcion FROM clientes_fases ORDER BY descripcion";
+$query = pg_query($conn, $sql);
+?>
                           </select>                          
                         </div>  
                         <label class="control-label col-md-2 col-sm-2 col-xs-12 text-left" for="estado">

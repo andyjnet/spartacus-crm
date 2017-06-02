@@ -4,10 +4,10 @@ session_start();
 if(!isset($_SESSION['usuario'])) {
 	header("location: ../page_403.html");
 }
-$username	= $_SESSION['usuario'];
-$idusuario	= $_SESSION['uid'];
-$usr_nombre	= $_SESSION['nombre'];
-$usr_admin	= $_SESSION['admin'];
+$username	= isset($_SESSION['usuario'])?$_SESSION['usuario']:'';
+$idusuario	= isset($_SESSION['uid'])?$_SESSION['uid']:0;
+$usr_nombre	= isset($_SESSION['nombre'])?$_SESSION['nombre']:'';
+$usr_admin	= $_SESSION['admin'] ?? 0;
 ?>
 <!DOCTYPE html>
 <html lang="es">

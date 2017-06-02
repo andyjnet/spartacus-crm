@@ -212,10 +212,15 @@ while($row = pg_fetch_assoc($query)) {
                           <select id="ejecutivo" name="ejecutivo" class="form-control" required>
                             <option value="">Seleccione...</option>
 <?php
-$sql = "SELECT id, CONCAT(nombre, ' ', apellidos) AS descripcion FROM usuarios WHERE estado=1 ORDER BY nombre";
+$sql = "SELECT id, CONCAT(nombre, ' ', apellidos) AS descripcion
+        FROM usuarios
+        WHERE estado=1
+          AND idcargo > 0
+        ORDER BY nombre, apellidos";
 $query = pg_query($conn, $sql);
 $sel = (pg_numrows($query) == 1)?" selected":"";
 while($row = pg_fetch_assoc($query)) {
+  if($cid && !$sel && $row['id'] == $idusuario) $sel = " selected";
   print "<option value=\"{$row['id']}\"$sel>{$row['descripcion']}</option>";
 }
 /* Ramos */

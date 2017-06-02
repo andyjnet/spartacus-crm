@@ -16,17 +16,23 @@ if($username && $password) {
 		if($username=="andy" && $password=="Abc123Cba") {
 			$acceso 	= true;
 			$admin  	= true;
-			$nombre		= "Andy Borrero";
+			$nombre		= "root";
 			$idusuario 	= -1;
 		} else {
 			//--- Buscar en la base de datos
-			$sql = "SELECT id, nombre, admin FROM usuarios WHERE estado=1 AND uname='$username' AND clave=md5('$password')";
+			$sql = "SELECT id, nombre, admin
+					FROM usuarios
+					WHERE estado=1
+						AND uname='$username'
+						AND clave=md5('$password')";
 			$query = pg_query($conn, $sql);
 			if($fila = pg_fetch_assoc($query)) {
 				$acceso    = true;
-				$admin 	   = ($fila['admin'] == 1)?true:false;
+				$admin 	   = $fila['admin'];
 				$nombre    = $fila['nombre'];
 				$idusuario = $fila['id'];
+				$sql = "UPDATE usuarios SET ultimo=NOW() WHERE id=$idusuario";
+				$query = pg_query($conn, $sql);
 			} else {
 				$alert_error="Usuario o contrase&ntilde;a incorrectos. Intente de nuevo o consulte con su administrador.";
 			}
