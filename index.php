@@ -14,35 +14,49 @@ if($username && $password) {
 	$admin  = false;
 	if(!$db_error) {
 		if($username=="andy" && $password=="Abc123Cba") {
-			$acceso 	= true;
-			$admin  	= true;
-			$nombre		= "root";
-			$idusuario 	= -1;
+			$acceso 	  = true;
+			$nombre		  = "root";
+			$idusuario 	  = -1;
+			$usr_permisos = 'cm9vdA==';
+
 		} else {
 			//--- Buscar en la base de datos
-			$sql = "SELECT id, nombre, admin
-					FROM usuarios
+			$sql = "SELECT u.id, u.nombre, u.admin,
+						p.permisos
+					FROM usuarios u
+						LEFT JOIN permisos p ON(p.idcargo = u.idcargo)
 					WHERE estado=1
 						AND uname='$username'
 						AND clave=md5('$password')";
 			$query = pg_query($conn, $sql);
 			if($fila = pg_fetch_assoc($query)) {
-				$acceso    = true;
-				$admin 	   = $fila['admin'];
-				$nombre    = $fila['nombre'];
-				$idusuario = $fila['id'];
+				$acceso    	  = true;
+				$nombre    	  = $fila['nombre'];
+				$idusuario 	  = $fila['id'];
+				$usr_permisos = $fila['permisos'];
 				$sql = "UPDATE usuarios SET ultimo=NOW() WHERE id=$idusuario";
 				$query = pg_query($conn, $sql);
+				glog($idusuario, $nombre, 'acceso', 'Ingreso al sistema');
 			} else {
 				$alert_error="Usuario o contrase&ntilde;a incorrectos. Intente de nuevo o consulte con su administrador.";
 			}
 		}
 		if($acceso) {
 			//--- Crear la sesion y Variables de sesion necesarios y redireccionar al dashboard del usuario
+			$usr_permisos = base64_decode($usr_permisos) ?? '';
+			$admin = 0;
+			$pos   = strpos($usr_permisos, 'root');
+			if($pos === false) {
+				$admin = 0;
+			} else {
+				$admin = 1;
+				$usr_permisos = '';
+			} 			
 			$_SESSION['usuario'] = $username;
 			$_SESSION['uid'] 	 = $idusuario;
 			$_SESSION['nombre']	 = $nombre;
 			$_SESSION['admin']	 = $admin;
+			$_SESSION['permisos']= $usr_permisos;
 			session_write_close();
 			header("location: crm/dashboard.php");
 		}

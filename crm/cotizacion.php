@@ -5,6 +5,7 @@ $notify    = 1;
 include('includes/dash-header.php');
 include('../includes/funciones.php');
 include('../includes/conn.php');
+include_once('../includes/tools.php');
 /* parametros get */
 $cid = isset($_GET['cid'])?$_GET['cid']:'';
 if(!$cid = base64_decode($cid, true)) $cid = '';
@@ -220,8 +221,12 @@ $sql = "SELECT id, CONCAT(nombre, ' ', apellidos) AS descripcion
 $query = pg_query($conn, $sql);
 $sel = (pg_numrows($query) == 1)?" selected":"";
 while($row = pg_fetch_assoc($query)) {
-  if($cid && !$sel && $row['id'] == $idusuario) $sel = " selected";
+  if(!strpos($sel,"selected")) {
+    if($cid && $row['id'] == $idusuario)
+      $sel = " selected";
+  }
   print "<option value=\"{$row['id']}\"$sel>{$row['descripcion']}</option>";
+  $sel = "";
 }
 /* Ramos */
 $sql = "SELECT id, descripcion, vehiculo FROM ramos WHERE id>0 ORDER BY descripcion";
@@ -358,16 +363,17 @@ while($row = pg_fetch_assoc($query)) {
                           <span class="fa fa-shield form-control-feedback right" aria-hidden="true"></span>
                         </div>
                       </div>
-                      <!--
-                      <div id="poliza-adjunto" style="display: none;">
-                        <h1 style="text-align: center;">subir archivo!</h1>                      
-                      </div>
-                      -->
+<?php
+if($usr_admin == 1 || comprueba($usr_permisos, "11")) {
+?>
                       <br />
                       <h2>Archivos adjuntos</h2>
                       <div class="ln_solid"></div>
                       <input type="file" name="files" id="adjunto-file">                      
                       <div id="tabla-adjuntos"></div>
+<?php
+}
+?>
           
                       <div class="ln_solid"></div>
                       <div class="col-md-12 col-sm-12 col-xs-12 text-right">

@@ -5,6 +5,7 @@ $notify    = 1;
 include('includes/dash-header.php');
 include('../includes/funciones.php');
 include('../includes/conn.php');
+include_once("../includes/tools.php");
 ?>
         <script>var RutVar=false, SalvarNuevo = 0;</script>
         <!-- Contenido de la página -->
@@ -201,7 +202,13 @@ while($row = pg_fetch_assoc($query)) {
                   <div class="x_title">
                     <h2>Listado de Clientes <small>lista de clientes actuales</small></h2>
                     <ul class="nav navbar-right panel_toolbox">
+<?php
+if($usr_admin == 1 || comprueba($usr_permisos, 3)) {
+?>
                       <li><a data-toggle="tooltip" data-placement="bottom" title="Agregar Cliente" id="new-client">Nuevo</a>
+<?php
+}
+?>
                       <li><a data-toggle="tooltip" data-placement="bottom" title="Importaci&oacute;n masiva" id="import-client">Importar</a>
                       <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                       </li>

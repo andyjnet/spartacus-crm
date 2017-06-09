@@ -1,5 +1,9 @@
 <?php
 session_start();
+if(isset($_SESSION['usuario'])) {
+    include('../includes/funciones.php');
+    glog($_SESSION['uid'], $_SESSION['nombre'], 'acceso', 'logout del sistema');
+}
 $_SESSION = array();
 if (ini_get("session.use_cookies")) {
     $params = session_get_cookie_params();

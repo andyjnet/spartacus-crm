@@ -15,10 +15,16 @@ $usr_admin	= $_SESSION['admin'];
 include('../../includes/funciones.php');
 include('../../includes/conn.php');
 //-- Buscamos los datos del archivo antes de eliminarlo
-$sql = "SELECT ruta FROM adjuntos WHERE id=$idfile AND (idusuario=$idusuario OR $usr_admin=1)";
+$sql = "SELECT ruta, modulo, idmodulo, anterior
+		FROM adjuntos
+		WHERE id=$idfile AND (idusuario=$idusuario OR $usr_admin=1)";
 $query = pg_query($conn, $sql);
-if($archivo = pg_fetch_assoc($query))
-	$ruta = $archivo['ruta'];
+if($archivo = pg_fetch_assoc($query)) {
+	$ruta	   = $archivo['ruta'];
+	$fmodulo   = $archivo['modulo'];
+	$fidmodulo = $archivo['idmodulo'];
+	$fanterior = $archivo['anterior'];
+}
 
 //-- Ahora eliminamos el registro de la base de datos
 $sql = "DELETE FROM adjuntos WHERE id = $idfile AND (idusuario=$idusuario OR $usr_admin=1)";
@@ -28,7 +34,8 @@ if(!$query = pg_query($conn, $sql)) {
     $str_bien = "Archivo eliminado correctamente!";
 	//-- Borramos el archivo del servidor
     if(isset($ruta) && file_exists($ruta)) $resp = unlink($ruta);
-	
+	//-- Log de actividad
+	glog($idusuario, $usr_nombre, 'adjuntos',"Registro Eliminado Nombre [$fanterior] Modulo [$fmodulo] IdModulo [$fidmodulo] Ruta [$ruta]");	
 	//-- Actualizamos la lista de adjuntos del modulo
 	$sql = "SELECT a.id AS idfile, a.ruta, a.anterior,
                 e.descripcion AS etapa,

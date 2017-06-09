@@ -4,10 +4,33 @@ if(!isset($cotizaciones)) {
 	if(!isset($_SESSION['usuario'])) {
 		header("location: ../page_403.html");
 	}
-	$idusuario = $_SESSION['uid'];
+	$idusuario    = $_SESSION['uid'];
+	$usr_admin    = $_SESSION['admin'];
+	$usr_nombre   = $_SESSION['nombre'];
 	include('../../includes/funciones.php');
 	include('../../includes/conn.php');
 }
+//-- Verificar permisos sobre etapas
+$usr_permisos = $_SESSION['permisos'] ?? '';
+$usr_etapas   = '';
+$usr_cotizaciones = '';
+if($usr_permisos && !$usr_admin) {
+	$access = explode(",", $usr_permisos);
+	foreach ($access as $item) {
+		if(intval($item) > 1000) {
+			$usr_etapas .= (intval($item) - 1000).',';
+		}
+	}
+	if($usr_etapas) {
+		$usr_etapas = substr($usr_etapas, 0, strlen($usr_etapas) - 1);
+		$usr_etapas = " OR p.idetapa IN($usr_etapas) ";
+	} else {
+		$usr_cotizaciones = " OR p.idejecutivo = $idusuario ";
+	}
+} else {
+	$access = array("");
+}
+
 //-- Clase para manipulacion de adjuntos
 if(!empty($_FILES) && $_FILES['files']['tmp_name']) {
     include('../../includes/class.fileuploader.php');
@@ -97,10 +120,26 @@ try  {
 //-- En caso de eliminacion de registro
 if($id_eliminar) {
 	$eliminado = true;
+	$sql = "SELECT c.nombre, p.idetapa
+			FROM cotizacion p
+				INNER JOIN clientes c ON(p.idcliente=c.id)
+			WHERE p.id=$id_eliminar";
+	$query = pg_query($conn, $sql);
+	if ($row = pg_fetch_assoc($query)) {
+		$cliente_e = $row['nombre'];
+		$etapa_e = $row['idetapa'];
+	} else {
+		$cliente_e = "";
+		$etapa_e = 0;
+	}
 	$sql   = "DELETE FROM cotizacion WHERE id=$id_eliminar";
 	if(!$query = pg_query($conn, $sql)) {
 		$eliminado = false;
-	}	
+	} else {
+		//-- Log de acciones
+		glog($idusuario, $usr_nombre, 'cotizacion',"Registro Eliminado ID [$id_eliminar] Cliente [$cliente_e] Etapa [$etapa_e]");		
+		
+	}
 }
 
 //-- Iniciamos transaccion
@@ -178,14 +217,6 @@ if($sw) {
 		}
 		//-- bof Manipulacion de adjuntos
 		if(isset($files)) {
-			/* No hace falta borrar adjuntos relacionados a la misma cotizacion
-			$sql = "DELETE FROM adjuntos
-					WHERE modulo='cotizacion'
-						AND idmodulo=$idcotizacion
-						AND idinterno=$etapa";
-			if(!$tran = pg_query($conn, $sql))
-				$str_error = "Ha ocurrido un problema actualizando el adjunto";
-			*/
 			$sql = "INSERT INTO adjuntos(modulo, idmodulo, idinterno, ruta, nombre,
 						anterior, anterior_titulo, size_bytes, size_text,
 						titulo, extension, tipo, idusuario)
@@ -197,6 +228,8 @@ if($sw) {
 				$str_error = "Ha ocurrido un problema agregando el archivo adjunto";
 		}
 		//-- eof Manipulacion de adjuntos
+		//-- Log de acciones
+		glog($idusuario, $usr_nombre, 'cotizacion',"Registro $texto ID [$idcotizacion] etapa [$etapa] Prima [$prima] Prima Neta [$prima_neta] Comision [$comision]");		
 		if(!isset($str_error))
 			$str_bien = "La cotizaci&oacute;n se ha $texto correctamente!";
 	} else {
@@ -215,7 +248,11 @@ if(isset($str_bien)) {
 } elseif(isset($str_error)) {
 	pg_query($conn, "ROLLBACK");
 }
-
+//-- bof Log de Adjunto
+if(isset($files) && isset($file_anterior)) {
+	glog($idusuario, $usr_nombre, 'adjuntos', "Archivo $file_anterior / $file_nombre adjuntado a cotizacion [$idcotizacion] en etapa [$etapa]");
+}
+//-- eof Log de Adjunto
 $sql = "SELECT p.id, 
 			   (CASE WHEN c.tipo='J' AND c.nombre_fantasia<>'' 
 				 THEN c.nombre_fantasia
@@ -235,7 +272,8 @@ $sql = "SELECT p.id,
 			INNER JOIN usuarios u ON(p.idejecutivo = u.id)
 			LEFT JOIN clientes_contactos cc ON(cc.idcliente = c.id)
 			LEFT JOIN cotizacion_vehiculos cv ON(cv.idcotizacion = p.id)
-		WHERE p.idejecutivo = $idusuario OR 1 = $usr_admin
+		WHERE ( $usr_admin = 1 $usr_cotizaciones )
+			$usr_etapas
 		ORDER BY 1";
 $query = pg_query($conn, $sql);
 ?>
@@ -297,6 +335,9 @@ while($fila = pg_fetch_assoc($query)) {
 		<td class=" text-left"><?php print $fila['vigencia'] ?></td>
 		<td class=" text-left"><?php print $fila['ejecutivo'] ?></td>
 		<td class=" last text-center">
+<?php
+if($usr_admin == 1 || comprueba($usr_permisos, "9")) {
+?>			
 			<a href="#"
 			   data-toggle="tooltip"
 			   data-placement="bottom"
@@ -305,13 +346,20 @@ while($fila = pg_fetch_assoc($query)) {
 			   id="a-editar<?php print $fila['id'] ?>">
 				<i class="fa fa-edit" style="color: green;"></i>
 			</a>
+<?php
+}
+if($usr_admin == 1 || comprueba($usr_permisos, "10")) {
+?>
 			&nbsp;&nbsp;
 			<a href="javascript:void(0)"
 			   data-toggle="tooltip" data-placement="bottom"
 			   title="Click para eliminar registro"
 			   onclick="fn_elimina(<?php print $fila['id'] ?>,'<?php print $fila['nombre'] ?>');">
 				<i class="fa fa-remove" style="color: red;"></i>
-			</a>			
+			</a>
+<?php
+}
+?>
         </td>
       </tr>
 <?php

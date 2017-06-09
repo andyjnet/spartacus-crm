@@ -23,4 +23,13 @@ function fec_to_format($fecha, $formato) {
     $dateUS = $dateObj->format('Y-m-d');
     return $dateUS;
 }
+
+//-- Generar registros en log
+function glog($idusuario = -1, $nombre = 'root', $modulo='', $accion = '') {
+    include('conn.php');
+    $texto = "$nombre $modulo: $accion";
+    $sql = "INSERT INTO log(idusuario, descripcion)
+            VALUES($idusuario, '$texto')";
+    $query = pg_query($conn, $sql);
+}
 ?>

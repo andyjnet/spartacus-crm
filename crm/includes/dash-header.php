@@ -4,10 +4,34 @@ session_start();
 if(!isset($_SESSION['usuario'])) {
 	header("location: ../page_403.html");
 }
-$username	= isset($_SESSION['usuario'])?$_SESSION['usuario']:'';
-$idusuario	= isset($_SESSION['uid'])?$_SESSION['uid']:0;
-$usr_nombre	= isset($_SESSION['nombre'])?$_SESSION['nombre']:'';
-$usr_admin	= $_SESSION['admin'] ?? 0;
+include_once("../includes/tools.php");
+$username	  = isset($_SESSION['usuario'])?$_SESSION['usuario']:'';
+$idusuario	  = isset($_SESSION['uid'])?$_SESSION['uid']:0;
+$usr_nombre	  = isset($_SESSION['nombre'])?$_SESSION['nombre']:'';
+$usr_admin	  = $_SESSION['admin'] ?? 0;
+$usr_permisos = $_SESSION['permisos'] ?? '';
+if($usr_permisos) {
+	$access    = explode(",", $usr_permisos);
+	$cotiza    = false;
+	$configura = false;
+	//-- bof Recorremos los permisos 
+	foreach ($access as $item) {
+		//-- Determinar si se hace visible la opcion de Cotizacion
+		if(intval($item) > 1000) {
+			$cotiza = true;
+		}
+		//-- Determinar si se hace visible el titulo de Configuracion
+		if(intval($item) >= 13 && intval($item) <= 23) {
+			$configura = true;
+		}
+		if($cotiza && $configura) break;
+	}
+	//-- eof Recorremos los permisos
+	
+	
+} else {
+	$access = array("");
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -96,36 +120,125 @@ if(isset($notify)) {
                   <li>
                     <a href="dashboard.php"><i class="fa fa-dashboard"></i> Inicio</a>
                   </li>
+<?php
+if($usr_admin == 1 || comprueba($usr_permisos, "2")
+				   || comprueba($usr_permisos, "3")
+				   || comprueba($usr_permisos, "4")
+				   || comprueba($usr_permisos, "5") ) {
+?>
                   <li>
                     <a href="clientes.php"><i class="fa fa-users"></i> Clientes</a>
                   </li>
+<?php
+}
+if($usr_admin == 1 || comprueba($usr_permisos, "-1")
+				   || comprueba($usr_permisos, "-2")
+				   || comprueba($usr_permisos, "8")
+				   || comprueba($usr_permisos, "9")
+				   || comprueba($usr_permisos, "10")
+				   || comprueba($usr_permisos, "11")
+				   || $cotiza === true) {
+?>
                   <li>
                     <a href="cotizacion.php"><i class="fa fa-calculator"></i> Cotizaciones</a>
-                  </li>					  
+                  </li>
+<?php
+}
+?>
                 </ul>
               </div>
               
               <div class="menu_section">
+<?php
+if($usr_admin == 1 || $configura) {
+?>
                 <h3>Configuraci&oacute;n</h3>
+<?php
+}
+?>
                 <ul class="nav side-menu">
+<?php
+if($usr_admin == 1 || comprueba($usr_permisos, "-3")
+				   || comprueba($usr_permisos, "13")
+				   || comprueba($usr_permisos, "14")
+				   || comprueba($usr_permisos, "15")
+				   || comprueba($usr_permisos, "16")
+				   || comprueba($usr_permisos, "17")
+				   || comprueba($usr_permisos, "18")
+				   || comprueba($usr_permisos, "19")
+				   || comprueba($usr_permisos, "20")) {
+?>
                   <li><a><i class="fa fa-database"></i> Tablas de Valores <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
+<?php
+if($usr_admin == 1 || comprueba($usr_permisos, "13")) {
+?>
 					  <li><a href="cargos.php">Cargos</a></li>
+<?php
+}
+if($usr_admin == 1 || comprueba($usr_permisos, "14")) {
+?>
 					  <li><a href="niveles.php">Categorias / Ejecutivos</a></li>
+<?php
+}
+if($usr_admin == 1 || comprueba($usr_permisos, "15")) {
+?>					  
 					  <li><a href="corredores.php">Corredores</a></li>
+<?php
+}
+if($usr_admin == 1 || comprueba($usr_permisos, "16")) {
+?>						  
 					  <li><a href="embudo.php">Embudo de Ventas</a></li>
+<?php
+}
+if($usr_admin == 1 || comprueba($usr_permisos, "17")) {
+?>	
 					  <li><a href="fases_cl.php">Fases de Clientes</a></li>
+<?php
+}
+if($usr_admin == 1 || comprueba($usr_permisos, "18")) {
+?>						  
                       <li><a href="currency.php">Monedas</a></li>
+<?php
+}
+if($usr_admin == 1 || comprueba($usr_permisos, "19")) {
+?>						  
 					  <li><a href="ramos.php">Ramos</a></li>
+<?php
+}
+if($usr_admin == 1 || comprueba($usr_permisos, "20")) {
+?>						  
 					  <li><a href="sucursales.php">Sucursales</a></li>
+<?php
+}
+?>
                     </ul>
                   </li>
+<?php
+}
+if($usr_admin == 1 || comprueba($usr_permisos, "-4")
+				   || comprueba($usr_permisos, "22")
+				   || comprueba($usr_permisos, "23") ) {
+?>
                   <li><a><i class="fa fa-user"></i> Usuarios <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
+<?php
+if($usr_admin == 1 || comprueba($usr_permisos, "22")) {
+?>						
                       <li><a href="ejecutivos.php">Gestionar</a></li>
-                      <li><a href="#">Permisos</a></li>
+<?php
+}
+if($usr_admin == 1 || comprueba($usr_permisos, "23")) {
+?>
+                      <li><a href="permisos.php">Permisos</a></li>
+<?php
+}
+?>
                     </ul>
-                  </li>                  
+                  </li>
+<?php
+}
+?>
                 </ul>
               </div>
 

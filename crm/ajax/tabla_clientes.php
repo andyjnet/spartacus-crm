@@ -4,9 +4,13 @@ if(!isset($clientes)) {
 	if(!isset($_SESSION['usuario'])) {
 		header("location: ../page_403.html");
 	}
-	$idusuario = $_SESSION['uid'];
-	include('../../includes/funciones.php');
-	include('../../includes/conn.php');
+	$idusuario    = $_SESSION['uid'];
+	$usr_nombre   = $_SESSION['nombre'];
+	$usr_admin	  = $_SESSION['admin'] ?? 0;
+	$usr_permisos = $_SESSION['permisos'] ?? '';
+	include_once('../../includes/funciones.php');
+	include_once('../../includes/conn.php');
+	include_once('../../includes/tools.php');
 }
 $idcliente	 = isset($_POST['idcliente'])?$_POST['idcliente']:0;
 $tipo 	 	 = isset($_POST['tipo'])?$_POST['tipo']:'';
@@ -25,8 +29,22 @@ $id_eliminar = isset($_POST['id-eliminar'])?$_POST['id-eliminar']:0;
 $nuevo		 = true;
 
 if($id_eliminar) {
+	$sql = "SELECT nombre, rut, idejecutivo FROM clientes WHERE id=$id_eliminar";
+	$query = pg_query($conn, $sql);
+	if($row = pg_fetch_assoc($query)) {
+		$nombre_e    = $row['nombre'];
+		$rut_e 	     = $row['rut'];
+		$ejecutivo_e = $row['idejecutivo'];
+	} else {
+		$nombre_e    = '';
+		$rut_e 	     = '';
+		$ejecutivo_e = '';		
+	}
 	$sql   = "DELETE FROM clientes WHERE id=$id_eliminar";
 	$query = pg_query($conn, $sql);
+	//-- Log de acciones
+	glog($idusuario, $usr_nombre, 'cliente',"Registro Eliminado ID [$id_eliminar] Nombre [$nombre_e] RUT [$rut_e] Ejecutivo [$ejecutivo_e]");					
+	
 }
 
 //-- Iniciamos transaccion
@@ -56,6 +74,7 @@ if($rut && $nombre && !$idcliente) {
 				,idusuario_mod = $idusuario
 				,fecha_mod = NOW()
 			WHERE id = $idcliente
+				AND (idejecutivo = $idusuario || $usr_admin = 1)
 			RETURNING id";
 	$texto  = "actualizado";
 	$texto2 = "actualizar";
@@ -79,8 +98,11 @@ if($sw) {
 				$str_error = "el cliente no se ha podido guardar, intente mas tarde";
 			}
 		}
-		if(!isset($str_error))
+		if(!isset($str_error)) {
+			//-- Log de acciones
+			glog($idusuario, $usr_nombre, 'cliente',"Registro $texto ID [$id] Nombre [$nombre] RUT [$rut] Ejecutivo [$ejecutivo]");					
 			$str_bien = "$nombre se ha $texto correctamente!";
+		}
 	} else {
 		if(@pg_last_error($tran)) {
 			$str_error="Servidor de base de datos ha retornado un error, intente mas tarde";
@@ -147,6 +169,9 @@ while($fila = pg_fetch_assoc($query)) {
 		<td class=" text-left"><?php print $telefono ?></td>
 		<td class=" text-left"><?php print $fila['email'] ?></td>
 		<td class=" last text-center">
+<?php
+if($usr_admin == 1 || comprueba($usr_permisos, "4")) {
+?>
 			<a href="#"
 			   data-toggle="tooltip"
 			   data-placement="bottom"
@@ -155,6 +180,10 @@ while($fila = pg_fetch_assoc($query)) {
 			   id="a-editar<?php print $fila['id'] ?>">
 				<i class="fa fa-edit" style="color: green;"></i>
 			</a>
+<?php
+}
+if($usr_admin == 1 || comprueba($usr_permisos, "5")) {
+?>
 			&nbsp;&nbsp;
 			<a href="#"
 			   data-toggle="tooltip" data-placement="bottom"
@@ -162,12 +191,19 @@ while($fila = pg_fetch_assoc($query)) {
 			   onclick="fn_elimina(<?php print $fila['id'] ?>,'<?php print $fila['nombre'] ?>');">
 				<i class="fa fa-remove" style="color: red;"></i>
 			</a>
+<?php
+}
+if($usr_admin == 1 || comprueba($usr_permisos, "8")) {
+?>
 			&nbsp;&nbsp;
 			<a href="cotizacion.php?cid=<?php print base64_encode($fila['id']) ?>"
 			   data-toggle="tooltip" data-placement="bottom"
 			   title="Nueva Cotizaci&oacute;n para <?php print $fila['nombre'] ?>">
 				<i class="fa fa-calculator"></i>
-			</a>			
+			</a>
+<?php
+}
+?>
         </td>
       </tr>
 <?php

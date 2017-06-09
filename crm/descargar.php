@@ -12,13 +12,17 @@ $usr_nombre	= $_SESSION['nombre'];
 $usr_admin	= $_SESSION['admin'];
 include('../includes/funciones.php');
 include('../includes/conn.php');
-$sql = "SELECT ruta, anterior, tipo
+
+$sql = "SELECT ruta, anterior, tipo, nombre
         FROM adjuntos
         WHERE id=$idfile";
 $query = pg_query($conn, $sql);
 if($file = pg_fetch_assoc($query)) {
     if(!file_exists("ajax/".$file['ruta']))
         exit;
+	//-- bof registro en el log
+	glog($idusuario, $usr_nombre, 'adjuntos', 'Descarga de archivo '.$file['anterior'].' / '.$file['nombre']);
+	//-- eof		
     $archivo = "ajax/".$file['ruta'];
     header('Content-Description: File Transfer');
     header('Content-Type: '.$file['tipo']);
