@@ -447,6 +447,7 @@ if( !isset($NoActivar) || $NoActivar == false ) {
       "searching" 	 : true,
       "ordering"     : true,
       "lengthChange" : true,
+      "bPaginate"    : false,
       language: {
         paginate: {
           first:    'Primera',

@@ -74,7 +74,6 @@ if($rut && $nombre && !$idcliente) {
 				,idusuario_mod = $idusuario
 				,fecha_mod = NOW()
 			WHERE id = $idcliente
-				AND (idejecutivo = $idusuario || $usr_admin = 1)
 			RETURNING id";
 	$texto  = "actualizado";
 	$texto2 = "actualizar";
@@ -82,6 +81,7 @@ if($rut && $nombre && !$idcliente) {
 } else {
 	$sw = 0;
 }
+
 if($sw) {
 	$tran = pg_query($conn, $sql);
 	if($fila = pg_fetch_assoc($tran)) {

@@ -422,7 +422,11 @@ if($cid) {
                   <div class="x_title">
                     <h2>Lista de cotizaciones <small>Resumen de cotizaciones registradas</small></h2>
                     <ul class="nav navbar-right panel_toolbox">
-                      <li><a data-toggle="tooltip" data-placement="bottom" title="Importaci&oacute;n masiva" id="import-client">Importar</a>
+                      <li><a data-toggle="tooltip" data-placement="bottom"
+                             title="Importaci&oacute;n masiva"
+                             href="importar-cot.php"
+                             id="import-cot">Importar
+                          </a>
                       <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                       </li>
                       <li><a class="close-link"><i class="fa fa-close"></i></a>
@@ -479,6 +483,10 @@ include('includes/dash-footer.php');
 ?>
 <!-- fileuploader -->
 <script src="../js/jquery.fileuploader.min.js" type="text/javascript"></script>
+<!-- Ordenar por campo de fecha -->
+<script src="../js/moment.min.js" type="text/javascript"></script>
+<script src="../js/datetime-moment.js" type="text/javascript"></script>
+
 <script>
   $(document).ready(function() {
     $("#cierra-frm").click(function() {
@@ -645,6 +653,7 @@ if($cid) {
   
   /* Funcion para activar Tabla dinamica */
   function activatbl(id_tabla) {
+    $.fn.dataTable.moment( 'DD/MM/YYYY' );
     $(id_tabla).dataTable({
       "info"      	 : true,
       "searching" 	 : true,

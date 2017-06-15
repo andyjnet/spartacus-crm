@@ -40,9 +40,11 @@ if(!$query = pg_query($conn, $sql)) {
 	$sql = "SELECT a.id AS idfile, a.ruta, a.anterior,
                 e.descripcion AS etapa,
                 a.size_text AS size,
-                to_char(a.fecha_reg, 'DD/MM/YYYY HH24:MI:SS') AS fecha_reg
+                to_char(a.fecha_reg, 'DD/MM/YYYY HH24:MI:SS') AS fecha_reg,
+				u.nombre AS usuario
             FROM adjuntos a
                 LEFT JOIN etapas_venta e ON(a.idinterno = e.id)
+				LEFT JOIN usuarios u ON(a.idusuario = u.id)
             WHERE modulo = '$modulo'
                 AND idmodulo = $idmodulo
             ORDER BY e.orden";
@@ -56,6 +58,7 @@ if(!$query = pg_query($conn, $sql)) {
                     <th class="column-title text-left">Etapa </th>
                     <th class="column-title text-left">Tamaño </th>
                     <th class="column-title text-left">Fecha </th>
+					<th class="column-title text-left">Usuario </th>
                     <th class="column-title no-link last text-center">
                         <span class="nobr">Acci&oacute;n</span>
                     </th>
@@ -79,6 +82,7 @@ if(pg_num_rows($query) == 0) {
         <td class=" text-left"><strong><?php print $fila['etapa'] ?></strong></td>
 		<td class=" text-left"><?php print $fila['size'] ?></td>
 		<td class=" text-left"><?php print $fila['fecha_reg'] ?></td>
+		<td class=" text-left"><?php print $fila['usuario'] ?></td>
 		<td class=" last text-center">
             <a href="javascript:void(0)"
 			   data-toggle="tooltip" data-placement="bottom"

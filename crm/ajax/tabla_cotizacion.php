@@ -10,6 +10,11 @@ if(!isset($cotizaciones)) {
 	include('../../includes/funciones.php');
 	include('../../includes/conn.php');
 }
+if(file_exists('../../includes/tools.php'))
+	include_once('../../includes/tools.php');
+if(file_exists('../includes/tools.php'))
+	include_once('../includes/tools.php');
+	
 //-- Verificar permisos sobre etapas
 $usr_permisos = $_SESSION['permisos'] ?? '';
 $usr_etapas   = '';
@@ -261,10 +266,11 @@ $sql = "SELECT p.id,
 			   cc.telefono, cc.movil, cc.email,
 			   r.descripcion AS ramo,
 			   ev.descripcion AS etapa,
-			   p.prima_neta,
+			   p.prima_neta, p.prima_actual,
 			   to_char(p.vigencia,'DD/MM/YYYY') AS vigencia,
 			   u.nombre AS ejecutivo,
-			   cv.patente, p.item
+			   cv.patente, cv.marca, cv.modelo, cv.year,
+			   p.item
 		FROM cotizacion p
 			INNER JOIN clientes c ON(p.idcliente = c.id)
 			INNER JOIN ramos r ON(p.idramo = r.id)
@@ -283,8 +289,8 @@ $query = pg_query($conn, $sql);
 	  <tr class="headings">
 		<th class="column-title text-left">ID</th>
 		<th class="column-title text-left">Cliente</th>
-		<th class="column-title text-left">Patente </th>
-		<th class="column-title text-left">Item </th>
+		<th class="column-title text-left">Telefono </th>
+		<th class="column-title text-left">Detalles </th>
 		<th class="column-title text-left">Etapa </th>
 		<th class="column-title text-left">Monto </th>
 		<th class="column-title text-left">Vigencia </th>
@@ -324,14 +330,18 @@ while($fila = pg_fetch_assoc($query)) {
 		$contacto = $email.' / '.$telefono;
 	else
 		$contacto = ($telefono)?$telefono:$email;
+	$auto = $fila['marca'].'/'.$fila['modelo'].'/'.$fila['year'];
+	$auto = str_replace("//", "/", $auto);
+	if(substr($auto,0,1) == '/') $auto = substr($auto, 1);
+	if(substr($auto, strlen($auto) - 1, 1) == '/') $auto = substr($auto, 0, strlen($auto)-1);
 ?>
       <tr class="<?php print $clase ?>">
 	    <td class=" text-left"><strong><?php print  sprintf("%04d", $fila['id']); ?></strong></td>
         <td class=" text-left"><strong><?php print  $fila['nombre'] ?></strong></td>
-        <td class=" text-left"><?php print $fila['patente'] ?></td>
-		<td class=" text-left"><?php print $fila['item'] ?></td>
+        <td class=" text-left"><?php print $contacto ?></td>
+		<td class=" text-left"><?php print $auto ?></td>
 		<td class=" text-left"><?php print $fila['etapa'] ?></td>
-		<td class=" text-left"><?php print number_format($fila['prima_neta'], 2, ',', '.') ?></td>
+		<td class=" text-left"><?php print number_format($fila['prima_actual'], 2, ',', '.') ?></td>
 		<td class=" text-left"><?php print $fila['vigencia'] ?></td>
 		<td class=" text-left"><?php print $fila['ejecutivo'] ?></td>
 		<td class=" last text-center">

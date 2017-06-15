@@ -86,8 +86,9 @@ $sql = "SELECT id, CONCAT(nombre, ' ', apellidos) AS descripcion
 $query = pg_query($conn, $sql);
 $sel = (pg_numrows($query) == 1)?" selected":"";
 while($row = pg_fetch_assoc($query)) {
-  if($cid && !$sel && $row['id'] == $idusuario) $sel = " selected";
+  if(!$sel && $row['id'] == $idusuario) $sel = " selected";
   print "<option value=\"{$row['id']}\"$sel>{$row['descripcion']}</option>";
+  $sel = "";
 }
 //-- Fases/Estados de clientes
 $sql = "SELECT id, descripcion FROM clientes_fases ORDER BY descripcion";
