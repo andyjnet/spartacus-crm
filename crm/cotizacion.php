@@ -30,6 +30,23 @@ if($cid) {
   }
 }
 ?>
+      <style type="text/css">
+        .dataTables_processing {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 250px;
+          height: 50px;
+          margin-left: -125px;
+          margin-top: -15px;
+          padding: 14px 0 2px 0;
+          border: 1px solid #ddd;
+          text-align: center;
+          color: white;
+          font-size: 15px;
+          background-color: #73879C;
+        }			
+      </style>
         <!-- fileuploader -->
         <link href="../css/jquery.fileuploader.css" media="all" rel="stylesheet">
         <script>var SalvarNuevo = 0;</script>     
@@ -435,13 +452,31 @@ if($cid) {
                     <div class="clearfix"></div>
                   </div>
                   <div class="x_content">
+                    <div class="table-responsive">
+                      <table class="table table-striped jambo_table bulk_action" id="tbl-cotizaciones" width="100%">
+                        <thead>
+                          <tr class="headings">
+                          <th class="column-title text-left">ID</th>
+                          <th class="column-title text-left">Cliente</th>
+                          <th class="column-title text-left">Telefono </th>
+                          <th class="column-title text-left">Detalles </th>
+                          <th class="column-title text-left">Etapa </th>
+                          <th class="column-title text-left">Monto </th>
+                          <th class="column-title text-left">Vigencia </th>
+                          <th class="column-title text-left">Ejecutivo </th>
+                          <th class="column-title no-link last text-center"><span class="nobr">Acci&oacute;n</span>
+                          </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr class="even pointer">
+                            <td class="text-center" colspan="9">Cargando datos del Servidor...</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>   
                     <!-- tabla dinamica -->
                     <div id="historial" class="clearfix">
-<?php
-$cotizaciones = 1;
-include("ajax/tabla_cotizacion.php");
-unset($cotizaciones);
-?>
                     </div>
                     <!--/ tabla dinamica --> 
                   </div>
@@ -524,9 +559,10 @@ include('includes/dash-footer.php');
         /* Colocar respuesta del script php en el marco DIV indicado */
         success:
           function(result){
+            oTable.fnDraw();
             $("#historial").html(result);
             if(result.indexOf('No hay cotizaciones') < 0)
-              activatbl("#tbl-clientes");
+              activatbl("#tbl-cotizaciones");
             $.hideLoading();
             if(SalvarNuevo == 1) {
               SalvarNuevo = 0;
@@ -556,6 +592,7 @@ include('includes/dash-footer.php');
         //-- Colocar respuesta del script php en el marco DIV indicado
         success:
           function(result){
+            oTable.fnDraw();
             $("#historial").html(result);
             $.hideLoading();
           }
@@ -635,14 +672,38 @@ include('includes/dash-footer.php');
 					}
 				}			
 		});
-		window.api = $.fileuploader.getInstance(input);    
+    $.fn.dataTable.moment( 'DD/MM/YYYY' );
+    var oTable = $("#tbl-cotizaciones").dataTable({
+      "info"      	 : true,
+      "searching" 	 : true,
+      "ordering"     : true,
+      "lengthChange" : true,
+      "bProcessing"  : true,
+      "bServerSide"  : true,
+      "sAjaxSource"  : "ajax/server-cot.php",
+          "oLanguage": {
+            "sProcessing": "Procesando...",
+            "sLoadingRecords": "Espere por favor - cargando...",
+            "sZeroRecords": "No hay registros que coincidan con su busqueda",
+						"sInfo": "Mostrando _START_ a _END_ de _TOTAL_",
+						"oPaginate" : {
+								"sFirst"   : 'Primera',
+								"sPrevious": 'Ant.',
+								"sNext"    : 'Sig.',
+								"sLast"    : 'Ultima'
+							},
+						"sInfoEmpty": "Mostrando 0 a 0 de 0 registros",
+						"sInfoFiltered": "(filtrados de _MAX_ registros totales)",
+						"sLengthMenu": "Monstrando _MENU_ registros",
+						"sSearch"	: "Buscar:"
+          }              
+    });
+    /** Actualizar los tados de la tabla por demanda **/
+    $("#up-table").click(function() {
+      oTable.fnDraw();
+    });    
+		window.api = $.fileuploader.getInstance(input); 
 <?php
-if( !isset($NoActivar) || !$NoActivar ) {
-?>    
-    /* Activamos la tabla dinamica una vez que haya cargado la pagina */
-    activatbl("#tbl-clientes");
-<?php
-}
 if($cid) {
 ?>
     $("#div-frm").show();
@@ -653,28 +714,7 @@ if($cid) {
   
   /* Funcion para activar Tabla dinamica */
   function activatbl(id_tabla) {
-    $.fn.dataTable.moment( 'DD/MM/YYYY' );
-    $(id_tabla).dataTable({
-      "info"      	 : true,
-      "searching" 	 : true,
-      "ordering"     : true,
-      "lengthChange" : true,
-      language: {
-        paginate: {
-          first:    'Primera',
-          previous: 'Ant.',
-          next:     'Sig.',
-          last:     'Ultima'
-        },
-        "info"         : "_START_ a _END_ de _TOTAL_",
-        "infoEmpty"    : "Sin datos para mostrar",
-        "emptyTable"   : "Sin datos para mostrar en tabla",
-        "lengthMenu"   : "Mostrar _MENU_ registros",
-        "search"       : "Buscar:",
-        "zeroRecords"  : "Ning&uacute;n registro coincide con su b&uacute;squeda!",
-        "infoFiltered" :  "(filtrados de _MAX_ registros totales)"
-      }              
-    });				
+    $("#up-table").click();
   }
   /* Validar formulario de registro de Cotizaciones */
   function validar(paramGuardarNuevo) {

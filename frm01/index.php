@@ -39,7 +39,7 @@ if($username && $password) {
 			header("location: form.php");
 		}
 	} else {
-		//--- Hay error en la conexion a la abse de datos
+		//--- Hay error en la conexion a la base de datos
 		$alert_error = $db_error;
 	}
 }

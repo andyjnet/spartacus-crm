@@ -246,139 +246,17 @@ if($sw) {
 	}
 }
 
-
 //-- Hacemos commit de transaccion
 if(isset($str_bien)) {
 	pg_query($conn, "COMMIT");
 } elseif(isset($str_error)) {
 	pg_query($conn, "ROLLBACK");
 }
-//-- bof Log de Adjunto
+//-- Log de Adjunto
 if(isset($files) && isset($file_anterior)) {
 	glog($idusuario, $usr_nombre, 'adjuntos', "Archivo $file_anterior / $file_nombre adjuntado a cotizacion [$idcotizacion] en etapa [$etapa]");
 }
-//-- eof Log de Adjunto
-$sql = "SELECT p.id, 
-			   (CASE WHEN c.tipo='J' AND c.nombre_fantasia<>'' 
-				 THEN c.nombre_fantasia
-				 ELSE c.nombre
-			   END) AS nombre,
-			   cc.telefono, cc.movil, cc.email,
-			   r.descripcion AS ramo,
-			   ev.descripcion AS etapa,
-			   p.prima_neta, p.prima_actual,
-			   to_char(p.vigencia,'DD/MM/YYYY') AS vigencia,
-			   u.nombre AS ejecutivo,
-			   cv.patente, cv.marca, cv.modelo, cv.year,
-			   p.item
-		FROM cotizacion p
-			INNER JOIN clientes c ON(p.idcliente = c.id)
-			INNER JOIN ramos r ON(p.idramo = r.id)
-			INNER JOIN etapas_venta ev ON(p.idetapa = ev.id)
-			INNER JOIN usuarios u ON(p.idejecutivo = u.id)
-			LEFT JOIN clientes_contactos cc ON(cc.idcliente = c.id)
-			LEFT JOIN cotizacion_vehiculos cv ON(cv.idcotizacion = p.id)
-		WHERE ( $usr_admin = 1 $usr_cotizaciones )
-			$usr_etapas
-		ORDER BY 1";
-$query = pg_query($conn, $sql);
 ?>
-<div class="table-responsive">
-  <table class="table table-striped jambo_table bulk_action" id="tbl-clientes">
-	<thead>
-	  <tr class="headings">
-		<th class="column-title text-left">ID</th>
-		<th class="column-title text-left">Cliente</th>
-		<th class="column-title text-left">Telefono </th>
-		<th class="column-title text-left">Detalles </th>
-		<th class="column-title text-left">Etapa </th>
-		<th class="column-title text-left">Monto </th>
-		<th class="column-title text-left">Vigencia </th>
-		<th class="column-title text-left">Ejecutivo </th>
-		<th class="column-title no-link last text-center"><span class="nobr">Acci&oacute;n</span>
-		</th>
-	  </tr>
-	</thead>
-	<tbody>
-<?php
-$NoActivar = false;
-if(pg_num_rows($query) == 0) {
-	$NoActivar = true;
-?>
-	  <tr class="even pointer">
-		<td class="text-center" colspan="9">No hay cotizaciones registradas! Busque un cliente y cree la primera</td>
-	  </tr>
-<?php
-}
-$act = 1;
-while($fila = pg_fetch_assoc($query)) {
-	$clase = (($act%2)==0)?"odd pointer":"even pointer";
-	if($fila['telefono'] <> '' && $fila['movil'] <> '') {
-		$telefono = $fila['telefono'].' / '.$fila['movil'];
-	} elseif($fila['telefono'] <> '') {
-		$telefono = $fila['telefono'];
-	} elseif($fila['movil'] <> '') {
-		$telefono = $fila['movil'];
-	} else {
-		$telefono = "";
-	}
-	if($fila['email'])
-		$email = $fila['email'];
-	else
-		$email= "";
-	if($telefono && $email)
-		$contacto = $email.' / '.$telefono;
-	else
-		$contacto = ($telefono)?$telefono:$email;
-	$auto = $fila['marca'].'/'.$fila['modelo'].'/'.$fila['year'];
-	$auto = str_replace("//", "/", $auto);
-	if(substr($auto,0,1) == '/') $auto = substr($auto, 1);
-	if(substr($auto, strlen($auto) - 1, 1) == '/') $auto = substr($auto, 0, strlen($auto)-1);
-?>
-      <tr class="<?php print $clase ?>">
-	    <td class=" text-left"><strong><?php print  sprintf("%04d", $fila['id']); ?></strong></td>
-        <td class=" text-left"><strong><?php print  $fila['nombre'] ?></strong></td>
-        <td class=" text-left"><?php print $contacto ?></td>
-		<td class=" text-left"><?php print $auto ?></td>
-		<td class=" text-left"><?php print $fila['etapa'] ?></td>
-		<td class=" text-left"><?php print number_format($fila['prima_actual'], 2, ',', '.') ?></td>
-		<td class=" text-left"><?php print $fila['vigencia'] ?></td>
-		<td class=" text-left"><?php print $fila['ejecutivo'] ?></td>
-		<td class=" last text-center">
-<?php
-if($usr_admin == 1 || comprueba($usr_permisos, "9")) {
-?>			
-			<a href="#"
-			   data-toggle="tooltip"
-			   data-placement="bottom"
-			   title="Click para editar registro"
-			   onclick="fn_modifica(<?php print $fila['id'] ?>);"
-			   id="a-editar<?php print $fila['id'] ?>">
-				<i class="fa fa-edit" style="color: green;"></i>
-			</a>
-<?php
-}
-if($usr_admin == 1 || comprueba($usr_permisos, "10")) {
-?>
-			&nbsp;&nbsp;
-			<a href="javascript:void(0)"
-			   data-toggle="tooltip" data-placement="bottom"
-			   title="Click para eliminar registro"
-			   onclick="fn_elimina(<?php print $fila['id'] ?>,'<?php print $fila['nombre'] ?>');">
-				<i class="fa fa-remove" style="color: red;"></i>
-			</a>
-<?php
-}
-?>
-        </td>
-      </tr>
-<?php
-	$act += 1 ;
-}
-?>
-	</tbody>
-  </table>
-</div>
 <script>
 	/* limpiamos y cerramos el panel de formulario si todo va bien */
 <?php
