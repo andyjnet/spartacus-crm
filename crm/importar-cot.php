@@ -33,7 +33,7 @@ if(isset($_FILES['csv']) && $_FILES['csv']['error'] == 0) {
                 $col_count = count($data);
 
                 // get the values from the csv
-                // ID;CLIENTE;RUT;TELÉFONO;RUBRO;PRIMA;VENC.;MONTO ASEG;MARCA;MODELO;AÑO;DIRECCIÓN;SUC
+                // ID EJECUTIVO;CLIENTE;RUT;TELÉFONO;RUBRO;PRIMA;FECHA VENC.;MONTO ASEG;MARCA;MODELO;AÑO;DIRECCIÓN;SUC
                 $csv[$row]['id']        = $data[0];
                 $csv[$row]['cliente']   = $data[1];
                 $csv[$row]['rut']       = $data[2];

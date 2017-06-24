@@ -130,6 +130,7 @@ switch($objeto) {
                 WHERE p.id = $id";
         $query = pg_query($conn, $sql);
         if($fila = pg_fetch_assoc($query)) {
+            $observacion = json_encode($fila['observacion']) ?? '';
 ?>
         <script>
             var tipoRamo = <?php print $fila['vehiculo'] ?>;
@@ -173,7 +174,7 @@ switch($objeto) {
             $("#monto-asegurado").val("<?php print $fila['monto_asegurado'] ?>");
             $("#vigencia").val("<?php print $fila['vigencia'] ?>");
             $("#renovacion").val("<?php print $fila['renovacion'] ?>");
-            $("#observacion").val("<?php print $fila['observacion'] ?>");
+            $("#observacion").val(<?php print $observacion ?>);
             $("#poliza").val("<?php print $fila['poliza'] ?>");
             
             $("#idcotizacion").remove();

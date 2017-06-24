@@ -114,21 +114,21 @@ if(isset($notify)) {
 
             <!-- sidebar menu -->
             <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
-              <div class="menu_section">
-                <h3>General</h3>
-                <ul class="nav side-menu">
-                  <li>
-                    <a href="dashboard.php"><i class="fa fa-dashboard"></i> Inicio</a>
-                  </li>
+				<div class="menu_section">
+				  <h3>General</h3>
+				  <ul class="nav side-menu">
+					<li>
+					  <a href="dashboard.php"><i class="fa fa-dashboard"></i> Inicio</a>
+					</li>
 <?php
 if($usr_admin == 1 || comprueba($usr_permisos, "2")
 				   || comprueba($usr_permisos, "3")
 				   || comprueba($usr_permisos, "4")
 				   || comprueba($usr_permisos, "5") ) {
 ?>
-                  <li>
-                    <a href="clientes.php"><i class="fa fa-users"></i> Clientes</a>
-                  </li>
+					<li>
+					  <a href="clientes.php"><i class="fa fa-users"></i> Clientes</a>
+					</li>
 <?php
 }
 if($usr_admin == 1 || comprueba($usr_permisos, "-1")
@@ -139,15 +139,29 @@ if($usr_admin == 1 || comprueba($usr_permisos, "-1")
 				   || comprueba($usr_permisos, "11")
 				   || $cotiza === true) {
 ?>
-                  <li>
-                    <a href="cotizacion.php"><i class="fa fa-calculator"></i> Cotizaciones</a>
-                  </li>
+					<li>
+					  <a href="cotizacion.php"><i class="fa fa-calculator"></i> Cotizaciones</a>
+					</li>
 <?php
 }
 ?>
-                </ul>
-              </div>
-              
+				  </ul>
+				</div>
+
+<?php
+if($usr_admin == 1) {
+?>
+				<div class="menu_section">
+				  <h3>Informes</h3>
+				  <ul class="nav side-menu">
+					<li>
+					  <a href="informe001.php"><i class="fa fa-line-chart"></i> Gestion</a>
+					</li>
+				  </ul>
+				</div>			  
+<?php
+}
+?>
               <div class="menu_section">
 <?php
 if($usr_admin == 1 || $configura) {
