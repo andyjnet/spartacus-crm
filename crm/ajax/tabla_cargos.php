@@ -9,6 +9,7 @@ if(!isset($cargos)) {
 }
 $id_cargo 	 = isset($_POST['id_cargo'])?$_POST['id_cargo']:0;
 $descripcion = isset($_POST['descripcion'])?$_POST['descripcion']:'';
+$supervisor	 = isset($_POST['supervisor'])?($_POST['supervisor']=='on')?1:0:0;
 $id_eliminar = isset($_POST['id-eliminar'])?$_POST['id-eliminar']:0;
 $nuevo		 = true;
 
@@ -19,8 +20,8 @@ if($id_eliminar) {
 
 //-- Verificamos si viene $id_etapa para crear nuevo registro o editar
 if(!$id_cargo && $descripcion) {
-	$sql = "INSERT INTO cargos(descripcion)
-		    SELECT '$descripcion'
+	$sql = "INSERT INTO cargos(descripcion, supervisado)
+		    SELECT '$descripcion', $supervisor
 			WHERE NOT EXISTS(SELECT id FROM cargos
 					         WHERE UPPER(descripcion)=UPPER('$descripcion')
 							)
@@ -30,6 +31,7 @@ if(!$id_cargo && $descripcion) {
 	$nuevo = false;
 	$sql = "UPDATE cargos SET
 				descripcion='$descripcion'
+				,supervisado = $supervisor
 		    WHERE id=$id_cargo
 		    RETURNING id";
 }
@@ -40,7 +42,7 @@ if($descripcion) {
 }
 
 //-- Buscar datos para rellenar la tabla
-$sql = "SELECT id, descripcion
+$sql = "SELECT id, descripcion, supervisado
 		FROM cargos
 		WHERE id>0
 		ORDER BY descripcion";
@@ -74,7 +76,7 @@ $act = 1;
 while($fila = pg_fetch_assoc($query)) {
 	$clase = (($act%2)==0)?"odd pointer":"even pointer";
 	$token = md5($fila['id'].'ajbc');
-	$url   = "&id={$fila['id']}&token=$token&descripcion={$fila['descripcion']}";
+	$url   = "&id={$fila['id']}&token=$token&descripcion={$fila['descripcion']}&supervisor={$fila['supervisado']}";
 ?>
       <tr class="<?php print $clase ?>">
         <td class=" text-left"><?php print $fila['descripcion'] ?></td>

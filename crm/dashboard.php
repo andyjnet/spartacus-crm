@@ -8,11 +8,6 @@ DATE_TRUNC('week', NOW())::DATE AS lunes,
 date_trunc('week', NOW() - interval '1 week')::DATE AS lunes_pasado,
 date_trunc('week', NOW() - interval '1 week')::date+6 AS domingo
  */
-//-- Usuarios
-$sql = "SELECT COUNT(*) AS total FROM usuarios WHERE id>0";
-$query = pg_query($conn, $sql);
-if($row = pg_fetch_assoc($query))
-  $total_usr = $row['total'];
 
 //-- Clientes
 $sql = "SELECT t.total,
@@ -41,16 +36,17 @@ $sql = "SELECT t.total,
           (CASE WHEN total > 0 THEN (t.semana*100/t.total) - (t.sem_pasada*100/t.total) ELSE 0 END) AS diferencia
         FROM (
           SELECT COUNT(*) AS total,
-            SUM( (CASE WHEN fecha_reg::date >= date_trunc('week', NOW() - interval '1 week')::DATE 
-                        AND fecha_reg::date <= date_trunc('week', NOW() - interval '1 week')::DATE+6
+            SUM( (CASE WHEN c.fecha_reg::date >= date_trunc('week', NOW() - interval '1 week')::DATE 
+                        AND c.fecha_reg::date <= date_trunc('week', NOW() - interval '1 week')::DATE+6
                    THEN 1 ELSE 0 END)
             ) AS sem_pasada,
-            SUM( (CASE WHEN fecha_reg::date >= date_trunc('week', NOW())::DATE
+            SUM( (CASE WHEN c.fecha_reg::date >= date_trunc('week', NOW())::DATE
                       THEN 1 ELSE 0 END)
             ) AS semana
-          FROM cotizacion
-          WHERE id>0
-            AND (idejecutivo = $idusuario OR $usr_admin = 1)
+          FROM cotizacion c
+            INNER JOIN usuarios u ON(c.idejecutivo = u.id)
+          WHERE c.id>0
+            AND (c.idejecutivo = $idusuario OR $usr_admin = 1 OR u.idsupervisor = $idusuario)
         ) AS t";
 $query = pg_query($conn, $sql);
 if($row = pg_fetch_assoc($query)) {
@@ -62,15 +58,7 @@ if($row = pg_fetch_assoc($query)) {
 <div class="right_col" role="main">
     <!-- top tiles -->
     <div class="row top_tiles">
-      <div class="animated flipInY col-lg-4 col-md-4 col-sm-6 col-xs-12">
-        <div class="tile-stats">
-          <div class="icon"><i class="fa fa-user" ></i></div>
-          <div class="count"><?php print $total_usr ?></div>
-          <h3>Usuarios</h3>
-        <p>Total usuarios registrados</p>
-        </div>
-      </div>
-      <div class="animated flipInY col-lg-4 col-md-4 col-sm-6 col-xs-12">
+      <div class="animated flipInY col-lg-6 col-md-6 col-sm-6 col-xs-12">
         <div class="tile-stats">
           <div class="icon"><i class="fa fa-users"></i></div>
           <div class="count"><?php print $total_clientes ?></div>
@@ -81,7 +69,7 @@ if($row = pg_fetch_assoc($query)) {
           </p>
         </div>
       </div>
-      <div class="animated flipInY col-lg-4 col-md-4 col-sm-6 col-xs-12">
+      <div class="animated flipInY col-lg-6 col-md-6 col-sm-6 col-xs-12">
         <div class="tile-stats">
           <div class="icon"><i class="fa fa-calculator"></i></div>
           <div class="count"><?php print $total_cotizacion ?></div>
@@ -132,7 +120,10 @@ if(isset($leyenda)) {
 $sql = "SELECT e.descripcion AS etapa, COUNT(*) AS cantidad
         FROM cotizacion c
           INNER JOIN etapas_venta e ON(c.idetapa=e.id)
-        WHERE c.idejecutivo = $idusuario OR $usr_admin = 1
+          INNER JOIN usuarios u ON(c.idejecutivo = u.id)
+        WHERE c.idejecutivo = $idusuario
+          OR $usr_admin = 1
+          OR u.idsupervisor = $idusuario
         GROUP BY e.descripcion, e.orden
         ORDER BY e.orden";
 $query = pg_query($conn, $sql);      

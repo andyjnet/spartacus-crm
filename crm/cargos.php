@@ -10,6 +10,7 @@ if($acc) {
   $token     = isset($_GET['token'])?$_GET['token']:'';
   $id        = isset($_GET['id'])?$_GET['id']:0;
   $des       = isset($_GET['descripcion'])?$_GET['descripcion']:'';
+  $supervisor= isset($_GET['supervisor'])?$_GET['supervisor']:0;
   $token_chk = md5($id.'ajbc');
 }
 
@@ -78,10 +79,20 @@ if(isset($id) && $id != 0) {
 if(isset($des) && $des != '') {
   print " value=\"$des\" ";
 }
+$checked_supervisor = (isset($supervisor) && $supervisor == 1)?"checked":"";;
 ?>
                                  required="required">
                         </div>
-                      </div>                      
+                      </div>
+                      <div class="form-group">
+                        <label class="control-label col-md-4 col-sm-4 col-xs-12" for="chk-supervisor"
+                               data-toggle="tooltip" data-placement="top" title="El cargo debe ser supervisado">
+                            Cargo supervisado
+                        </label>
+                        <div class="col-md-8 col-sm-8 col-xs-12">
+                          <input type="checkbox" class="js-switch" name="chk-supervisor" id="chk-supervisor" <?php print $checked_supervisor ?> /> 
+                        </div>
+                      </div>                       
                       <div class="ln_solid"></div>
                         <div class="form-group">
                             <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
@@ -269,6 +280,10 @@ pg_close($conn);
 </script>
 <script>
   $("#save-frm").click(function() {
+    var chkSup= 'off';
+    if ($('#chk-supervisor').is(":checked")) {
+      chkSup = 'on';
+    }     
 		$.ajax({type: 'POST',
 			url: "ajax/tabla_cargos.php",
 			async: false,
@@ -279,13 +294,15 @@ pg_close($conn);
 					$.showLoading({name: 'jump-pulse',allowHide: false});			
 				},
 			data: {
-					'id_cargo': $('#id-cargo').val(),
-					'descripcion': $('#descripcion').val()
+					'id_cargo'   : $('#id-cargo').val(),
+					'descripcion': $('#descripcion').val(),
+          'supervisor' : chkSup
 				  },
 			//-- Colocar respuesta del script php en el marco DIV indicado
 			success:
 				function(result){
           $("#descripcion").val('').focus();
+           if(chkSup == 'on') $('#chk-supervisor').click();
           $("#id-cargo").remove();
 					$("#historial").html(result);
 					$.hideLoading();

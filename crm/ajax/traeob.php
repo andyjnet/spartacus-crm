@@ -14,7 +14,7 @@ switch($objeto) {
         $sql = "SELECT rut, ingreso, nombre, apellidos, uname, clave,
                     telefono, movil, email, direccion,
                     TO_CHAR(ingreso,'DD/MM/YYYY') AS ingreso,
-                    idnivel, idcargo, idsucursal, estado
+                    idnivel, idcargo, idsucursal, estado, idsupervisor
                 FROM usuarios
                 WHERE id=$id";
         $query = pg_query($conn, $sql);
@@ -34,12 +34,15 @@ switch($objeto) {
             $("#cargo").children().attr('selected', false);
             $("#nivel").children().attr('selected', false);
             $("#sucursal").children().attr('selected', false);
+            $("#supervisor").children().attr('selected', false);
             $("#cargo").children('[value="<?php print $fila['idcargo'] ?>"]').attr('selected', true);
             $("#nivel").children('[value="<?php print $fila['idnivel'] ?>"]').attr('selected', true);
             $("#sucursal").children('[value="<?php print $fila['idsucursal'] ?>"]').attr('selected', true);
+            $("#supervisor").children('[value="<?php print $fila['idsupervisor'] ?>"]').attr('selected', true);
             $("#cargo").val('<?php print $fila['idcargo'] ?>');
             $("#nivel").val('<?php print $fila['idnivel'] ?>');
             $("#sucursal").val('<?php print $fila['idsucursal'] ?>');
+            $("#supervisor").val('<?php print $fila['idsupervisor'] ?>');
             if(esUsuario && <?php print $fila['estado']?'false':'true' ?>)
                 $("#chk-usuario").trigger("click");
             $("#uname").val("<?php print $fila['uname'] ?>");

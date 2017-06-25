@@ -110,13 +110,13 @@ include('../includes/conn.php');
                         </label>
                         <div class="col-md-4 col-sm-4 col-xs-12">
                           <select id="cargo" class="form-control" required>
-                            <option value="0">Seleccione...</option>
+                            <option value="0" es-sup="0">Seleccione...</option>
 <?php
 //-- Cargos
-$sql = "SELECT id, descripcion FROM cargos WHERE id>0 ORDER BY descripcion";
+$sql = "SELECT id, descripcion, supervisado FROM cargos WHERE id>0 ORDER BY descripcion";
 $query = pg_query($conn, $sql);
 while($row = pg_fetch_assoc($query)) {
-  print "<option value=\"{$row['id']}\">{$row['descripcion']}</option>";
+  print "<option value=\"{$row['id']}\" es-sup=\"{$row['supervisado']}\">{$row['descripcion']}</option>";
 }
 ?>
                           </select>                          
@@ -139,10 +139,30 @@ while($row = pg_fetch_assoc($query)) {
                         </div>                        
                       </div>
                       <div class="form-group">
+                        <label class="control-label col-md-2 col-sm-2 col-xs-12 text-left" for="supervisor">
+                          Supervisor
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12">
+                          <select id="supervisor" class="form-control" required>
+                            <option value="0">Seleccione...</option>
+<?php
+//-- Supervisor inmediato
+$sql = "SELECT id, CONCAT(nombre, ' ',apellidos) AS descripcion
+        FROM usuarios
+        WHERE id>0
+          AND estado = 1
+        ORDER BY nombre, apellidos";
+$query = pg_query($conn, $sql);
+while($row = pg_fetch_assoc($query)) {
+  print "<option value=\"{$row['id']}\">{$row['descripcion']}</option>";
+}
+?>
+                          </select>  
+                        </div>                         
                         <label class="control-label col-md-2 col-sm-2 col-xs-12" for="sucursal">
                           Sucursal <span class="required">*</span>
                         </label>
-                        <div class="col-md-10 col-sm-10 col-xs-12">
+                        <div class="col-md-4 col-sm-4 col-xs-12">
                           <select id="sucursal" class="form-control" required>
                             <option value="0">Seleccione...</option>
 <?php
@@ -367,7 +387,8 @@ include('includes/dash-footer.php');
             'uname'      : document.getElementById("uname").value,
             'clave'      : document.getElementById("clave").value,
             'pwd'        : document.getElementById("pwd-usr").value,
-            'idejecutivo': document.getElementById("idejecutivo").value
+            'idejecutivo': document.getElementById("idejecutivo").value,
+            'supervisor' : document.getElementById("supervisor").value
             },
         /* Colocar respuesta del script php en el marco DIV indicado */
         success:
@@ -469,8 +490,10 @@ if( !isset($NoActivar) || $NoActivar == false ) {
   function validar(paramGuardarNuevo) {
     var ruta=document.frm_cliente;
     var $myForm = $('#frm-cliente');
+    var esSup = $( "#cargo option:selected" ).attr("es-sup");
     var el = $('#rut').parsley();
     var cl = $('#repite-clave').parsley();
+    var es = $('#supervisor').parsley();
     var eRut = false;
     if (typeof paramGuardarNuevo === 'undefined') paramGuardarNuevo = 0;
     SalvarNuevo = paramGuardarNuevo;
@@ -484,6 +507,15 @@ if( !isset($NoActivar) || $NoActivar == false ) {
     }
     if(eRut)
       return false;
+    /* Verificar que el supervisor sea requerido */
+    es.removeError('forcederror', {updateClass: true});
+    $(es.ulError).empty();
+    if(esSup == "1" && $('#supervisor').val() == "0") {
+      es.addError('forcederror', {message: 'El cargo seleccionado requiere supervisor'});
+      $("#supervisor").focus();
+      return false;
+    }
+    
     /* Verificamos la contraseña */
     cl.removeError('forcederror', {updateClass: true});
     $(cl.ulError).empty();

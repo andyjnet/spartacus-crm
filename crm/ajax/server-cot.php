@@ -159,7 +159,6 @@
 	}
 	
 	
-	
 	/*
 	 * SQL queries
 	 * Get data to display
@@ -192,7 +191,7 @@
 			LEFT JOIN cotizacion_vehiculos cv ON(cv.idcotizacion = p.id)
 			WHERE p.id>0
 				$sWhere
-				AND ( $usr_admin = 1 $usr_cotizaciones )
+				AND ( $usr_admin = 1 $usr_cotizaciones OR u.idsupervisor = $idusuario)
 				$usr_etapas			
 		) AS t
 		$sOrder
@@ -260,6 +259,8 @@
 		$auto = str_replace("//", "/", $auto);
 		if(substr($auto,0,1) == '/') $auto = substr($auto, 1);
 		if(substr($auto, strlen($auto) - 1, 1) == '/') $auto = substr($auto, 0, strlen($auto)-1);
+		$link_edit = '';
+		$link_delete = '';
 		if($usr_admin == 1 || comprueba($usr_permisos, "9")) {
 			$link_edit = '<a href="#"  data-toggle="tooltip" '.
 				'data-placement="bottom" title="Click para editar registro" '.
