@@ -8,10 +8,14 @@ if(!isset($clientes)) {
 	$usr_nombre   = $_SESSION['nombre'];
 	$usr_admin	  = $_SESSION['admin'] ?? 0;
 	$usr_permisos = $_SESSION['permisos'] ?? '';
-	include_once('../../includes/funciones.php');
-	include_once('../../includes/conn.php');
-	include_once('../../includes/tools.php');
 }
+$arch = '../../includes/funciones.php';
+if(file_exists($arch)) include_once($arch);
+$arch = '../../includes/conn.php';
+if(file_exists($arch)) include_once($arch);
+$arch = '../../includes/tools.php';
+if(file_exists($arch)) include_once($arch);
+
 $idcliente	 = isset($_POST['idcliente'])?$_POST['idcliente']:0;
 $tipo 	 	 = isset($_POST['tipo'])?$_POST['tipo']:'';
 $rut 	 	 = isset($_POST['rut'])?$_POST['rut']:'';
@@ -77,7 +81,6 @@ if($rut && $nombre && !$idcliente) {
 			RETURNING id";
 	$texto  = "actualizado";
 	$texto2 = "actualizar";
-	
 } else {
 	$sw = 0;
 }

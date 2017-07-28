@@ -18,11 +18,13 @@ if($username && $password) {
 			$nombre		  = "root";
 			$idusuario 	  = -1;
 			$usr_permisos = 'cm9vdA==';
+			$id_sup_usr	  = 0;
+			$id_campaign  = 0;
 
 		} else {
 			//--- Buscar en la base de datos
 			$sql = "SELECT u.id, u.nombre, u.admin,
-						p.permisos
+						p.permisos, u.idsupervisor
 					FROM usuarios u
 						LEFT JOIN permisos p ON(p.idcargo = u.idcargo)
 					WHERE estado=1
@@ -34,9 +36,18 @@ if($username && $password) {
 				$nombre    	  = $fila['nombre'];
 				$idusuario 	  = $fila['id'];
 				$usr_permisos = $fila['permisos'];
+				$id_sup_usr   = $fila['idsupervisor'];
 				$sql = "UPDATE usuarios SET ultimo=NOW() WHERE id=$idusuario";
 				$query = pg_query($conn, $sql);
 				glog($idusuario, $nombre, 'acceso', 'Ingreso al sistema');
+				//-- localizamos campaña
+				$id_campaign = 0;
+				$sql = "SELECT id FROM campaign
+						WHERE estado = 1
+							AND NOW() BETWEEN inicio AND fin";
+				$query = pg_query($sql);
+				if($row = pg_fetch_array($query))
+					$id_campaign = $row[0];
 			} else {
 				$alert_error="Usuario o contrase&ntilde;a incorrectos. Intente de nuevo o consulte con su administrador.";
 			}
@@ -51,12 +62,18 @@ if($username && $password) {
 			} else {
 				$admin = 1;
 				$usr_permisos = '';
-			} 			
-			$_SESSION['usuario'] = $username;
-			$_SESSION['uid'] 	 = $idusuario;
-			$_SESSION['nombre']	 = $nombre;
-			$_SESSION['admin']	 = $admin;
-			$_SESSION['permisos']= $usr_permisos;
+				$id_sup_usr = 0;
+			}
+			//--- Obtenemos en valor de la UF del dia
+			include_once("crm/valor_uf.php");
+			$_SESSION['usuario'] 	= $username;
+			$_SESSION['uid'] 	 	= $idusuario;
+			$_SESSION['nombre']	 	= $nombre;
+			$_SESSION['admin']	 	= $admin;
+			$_SESSION['permisos']   = $usr_permisos;
+			$_SESSION['supervisor'] = $id_sup_usr;
+			$_SESSION['campaign']	= $id_campaign;
+			$_SESSION['valor_uf']	= $valor_uf;
 			session_write_close();
 			header("location: crm/dashboard.php");
 		}

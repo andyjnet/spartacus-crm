@@ -19,7 +19,7 @@ if ($acc && $token != $token_chk) {
   $str_error = "Accion rechazada, token incorrecto!";
 }
 //-- Buscar orden inicial para seleccion
-$sql = "SELECT COUNT(*) AS cantidad FROM corredores";
+$sql = "SELECT COUNT(*) AS cantidad FROM corredores WHERE id>0";
 $query = pg_query($conn, $sql);
 $corredores = 0;
 if($fila = pg_fetch_assoc($query)) {

@@ -175,7 +175,20 @@ while($row = pg_fetch_assoc($query)) {
 ?>
                           </select>                          
                         </div>                         
-                      </div>                       
+                      </div>
+                      <div class="form-group">
+                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="comision">
+                          Comisi&oacute;n (%) 
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
+                          <input type="text" class="form-control" id="comision" name="comision"
+                                 placeholder="% de comision"
+                                 data-toggle="tooltip" data-placement="bottom"
+                                 title="Porcentaje de comisi&oacute;n individual"
+                                 onkeypress="validaNum(event);">
+                          <span class="fa fa-percent form-control-feedback right" aria-hidden="true"></span>
+                        </div>                         
+                      </div>                      
                       <br />
                       <h2>Datos de Acceso</h2>
                       <div class="ln_solid"></div>
@@ -383,6 +396,7 @@ include('includes/dash-footer.php');
             'cargo'      : document.getElementById("cargo").value,
             'nivel'      : document.getElementById("nivel").value,
             'sucursal'   : document.getElementById("sucursal").value,
+            'comision'   : document.getElementById("comision").value,
             'usuario'    : usrActivo,
             'uname'      : document.getElementById("uname").value,
             'clave'      : document.getElementById("clave").value,
@@ -438,7 +452,8 @@ include('includes/dash-footer.php');
     $('#cancela-borrar').click(function() {
       $("#id-eliminar").remove();
       $("#modElimina").modal('toggle');
-    });    
+    });
+    $("[id='comision']").keypress(validaNum);    
 <?php
 if( !isset($NoActivar) || $NoActivar == false ) {
 ?>    
@@ -448,6 +463,21 @@ if( !isset($NoActivar) || $NoActivar == false ) {
 }
 ?>
   });
+  //-- Validar campo numerico
+  function validaNum(evt) {
+     var key = window.event ? evt.keyCode : evt.which;
+     var valor = document.getElementById("comision").value;
+     if (key === 8 || key === 46) {
+      if(key === 46 && valor.indexOf('.') >= 0 ) {
+        return false;
+      }
+      return true;
+     } else if ( key < 48 || key > 57 ) {
+       return false;
+     } else {
+       return true;
+     }
+  }  
   /* Validar campo rut para permitir solo numeros, punto y guion */
   function validate(evt) {
      var key = window.event ? evt.keyCode : evt.which;

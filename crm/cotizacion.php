@@ -6,10 +6,19 @@ include('includes/dash-header.php');
 include('../includes/funciones.php');
 include('../includes/conn.php');
 include_once('../includes/tools.php');
+$id_sup_usr = $_SESSION['supervisor'];
 /* parametros get */
 $cid = isset($_GET['cid'])?$_GET['cid']:'';
 if(!$cid = base64_decode($cid, true)) $cid = '';
-
+ /* Datos del usuario */
+ $comision_usuario = 0;
+ if($idusuario) {
+    $sql = "SELECT comision FROM usuarios WHERE id=$idusuario";
+    $query = pg_query($conn, $sql);
+    $row = pg_fetch_assoc($query);
+    $comision_usuario = $row['comision'];
+ }
+ 
 /* Buscar los datos del cliente */
 if($cid) {
   $sql = "SELECT c.rut, c.nombre, c.nombre_fantasia,
@@ -126,7 +135,7 @@ if($cid) {
                       </div>
                       <div class="form-group">
                         <label class="control-label col-md-2 col-sm-2 col-xs-12" for="telefono">
-                          Tel&eacute;fono <span class="required">*</span>
+                          Tel&eacute;fono 
                         </label>
                         <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
                           <input type="text" class="form-control"
@@ -136,7 +145,7 @@ if($cid) {
                           <span class="fa fa-phone form-control-feedback right" aria-hidden="true"></span>
                         </div>
                           <label class="control-label col-md-2 col-sm-2 col-xs-12" for="movil">
-                          M&oacute;vil <span class="required">*</span>
+                          M&oacute;vil 
                         </label>
                         <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
                           <input type="text" class="form-control"
@@ -148,7 +157,7 @@ if($cid) {
                       </div>
                       <div class="form-group">
                         <label class="control-label col-md-2 col-sm-2 col-xs-12" for="email">
-                          Email <span class="required">*</span>
+                          Email 
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12 has-feedback">
                           <input type="email" data-parsley-trigger="change"
@@ -159,8 +168,81 @@ if($cid) {
                           <span class="fa fa-envelope form-control-feedback right" aria-hidden="true"></span>
                         </div>                        
                       </div>
+                      <div class="form-group">
+                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="direccion">
+                          Direcci&oacute;n
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
+                          <input type="text" class="form-control"
+                                 id="direccion" name="direccion"
+                                 value="<?php print isset($direccion)?$direccion:'' ?>"
+                                 placeholder="Calle número, departamento">
+                          <span class="fa fa-home form-control-feedback right" aria-hidden="true"></span>
+                        </div>
+                          <label class="control-label col-md-2 col-sm-2 col-xs-12" for="region">
+                          Regi&oacute;n 
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
+                          <input type="text" class="form-control"
+                                 id="region" name="region"
+                                 value="<?php print isset($region)?$region:''; ?>"
+                                 placeholder="Indique region">
+                          <span class="fa fa-home form-control-feedback right" aria-hidden="true"></span>                          
+<!-- Select automatico                          
+                          <select id="region" name="region" class="form-control">
+                            <option value="0">Seleccione...</option>
+<?php
+/* Regiones  */
+$sql = "SELECT id_re AS id,
+          CONCAT(str_descripcion,' (', str_romano, ')') AS descripcion
+        FROM region_cl
+        WHERE id_re>0
+        ORDER BY id_re";
+$query = pg_query($conn, $sql);
+$sel = (pg_numrows($query) == 1)?" selected":"";
+while($row = pg_fetch_assoc($query)) {
+  print "<option value=\"{$row['id']}\"$sel>{$row['descripcion']}</option>";
+}
+?>                            
+                          </select>
+-->
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="provincia">
+                          Provincia
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
+                          <input type="text" class="form-control"
+                                 id="provincia" name="provincia"
+                                 value="<?php print isset($provincia)?$provincia:'' ?>"
+                                 placeholder="Indique Provincial">
+                          <span class="fa fa-home form-control-feedback right" aria-hidden="true"></span>
+<!-- Select automatico                          
+                          <select id="provincia" name="provincia" class="form-control">
+                            <option value="0">Seleccione una region</option>
+                          </select>
+-->
+                        </div>
+                          <label class="control-label col-md-2 col-sm-2 col-xs-12" for="comuna">
+                          Comuna 
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
+                          <input type="text" class="form-control"
+                                 id="comuna" name="comuna"
+                                 value="<?php print isset($comuna)?$comuna:'' ?>"
+                                 placeholder="Indique comuna o ciudad">
+                          <span class="fa fa-home form-control-feedback right" aria-hidden="true"></span>                          
+<!-- Select automatico
+                          <select id="comuna" name="comuna" class="form-control">
+                            <option value="0">Seleccione una provincia</option>                           
+                          </select>
+-->                          
+                        </div>
+                      </div>
+                      
                       <br />
-                      <h2>Detalles de Poliza</h2>
+                      <h2>Status</h2>
                       <div class="ln_solid"></div>
 
                       <div class="form-group">
@@ -169,18 +251,19 @@ if($cid) {
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
                           <select id="etapa" name="etapa" class="form-control" required>
-                            <option value="" is-attach="no">Seleccione...</option>
+                            <option value="" is-attach="no" is-poliza="no">Seleccione...</option>
 <?php
-/* Estados/Etapas de Cotizaion  */
+/* Estados/Etapas de Cotizacion  */
 $sql = "SELECT id, descripcion,
-          (CASE adjunto WHEN true THEN 'si' ELSE 'no' END) AS adjunto
+          (CASE adjunto WHEN true THEN 'si' ELSE 'no' END) AS adjunto,
+          (CASE poliza  WHEN true THEN 'si' ELSE 'no' END) AS poliza
         FROM etapas_venta
         WHERE id>0 AND estado=1
         ORDER BY orden";
 $query = pg_query($conn, $sql);
 $sel = (pg_numrows($query) == 1)?" selected":"";
 while($row = pg_fetch_assoc($query)) {
-  print "<option value=\"{$row['id']}\" is-attach=\"{$row['adjunto']}\"$sel>{$row['descripcion']}</option>";
+  print "<option value=\"{$row['id']}\" is-attach=\"{$row['adjunto']}\" is-poliza=\"{$row['poliza']}\"$sel>{$row['descripcion']}</option>";
 }
 /* Sucursales */
 $sql = "SELECT id, descripcion FROM sucursales WHERE id>0 ORDER BY descripcion";
@@ -201,56 +284,68 @@ $sel = (pg_numrows($query) == 1)?" selected":"";
 while($row = pg_fetch_assoc($query)) {
   print "<option value=\"{$row['id']}\"$sel>{$row['descripcion']}</option>";
 }
-/* Corredores */
-$sql = "SELECT id, descripcion FROM corredores WHERE id>0 ORDER BY descripcion";
-$query = pg_query($conn, $sql);
-?>
-                          </select>                          
-                        </div>  
-                        <label class="control-label col-md-2 col-sm-2 col-xs-12 text-left" for="corredor">
-                          Corredor <span class="required">*</span>
-                        </label>
-                        <div class="col-md-4 col-sm-4 col-xs-12">
-                          <select id="corredor" name="corredor" class="form-control" required>
-                            <option value="">Seleccione...</option>
-<?php
-$sel = (pg_numrows($query) == 1)?" selected":"";
-while($row = pg_fetch_assoc($query)) {
-  print "<option value=\"{$row['id']}\"$sel>{$row['descripcion']}</option>";
-}
-?>
-                          </select>  
-                        </div>                        
-                      </div>                     
-                      <div class="form-group">
-                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="ejecutivo">
-                          Ejecutivo <span class="required">*</span>
-                        </label>
-                        <div class="col-md-4 col-sm-4 col-xs-12">
-                          <select id="ejecutivo" name="ejecutivo" class="form-control" required>
-                            <option value="">Seleccione...</option>
-<?php
+/* Ejecutivos */
 $sql = "SELECT id, CONCAT(nombre, ' ', apellidos) AS descripcion
         FROM usuarios
         WHERE estado=1
           AND idcargo > 0
         ORDER BY nombre, apellidos";
 $query = pg_query($conn, $sql);
+?>
+                          </select>                          
+                        </div>  
+                        <label class="control-label col-md-2 col-sm-2 col-xs-12 text-left" for="ejecutivo">
+                          Ejecutivo <span class="required">*</span>
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12">
+                          <select id="ejecutivo" name="ejecutivo" class="form-control" required>
+                            <option value="">Seleccione...</option>
+<?php
 $sel = (pg_numrows($query) == 1)?" selected":"";
 while($row = pg_fetch_assoc($query)) {
   if(!strpos($sel,"selected")) {
     if($cid && $row['id'] == $idusuario)
       $sel = " selected";
-  }
+  }  
   print "<option value=\"{$row['id']}\"$sel>{$row['descripcion']}</option>";
   $sel = "";
 }
-/* Ramos */
-$sql = "SELECT id, descripcion, vehiculo FROM ramos WHERE id>0 ORDER BY descripcion";
-$query = pg_query($conn, $sql);
 ?>
-                          </select>                          
-                        </div>  
+                          </select>  
+                        </div>                        
+                      </div>
+                      <div class="form-group">
+                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="vigencia">
+                          Vigencia
+                        </label>                        
+                          <div class="control-group">
+                            <div class="controls">
+                              <div class="col-md-4 col-sm-4 col-xs-12 xdisplay_inputx form-group has-feedback">
+                                <input type="text" class="form-control" id="vigencia" name="vigencia" placeholder="Vigencia" aria-describedby="inputSuccess2Status">
+                                <span class="fa fa-calendar-o form-control-feedback right" aria-hidden="true"></span>
+                                <span id="inputSuccess2Status" class="sr-only">(Exito)</span>
+                              </div>
+                            </div>
+                          </div>
+                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="renovacion">
+                          Renovaci&oacute;n
+                        </label>                        
+                          <div class="control-group">
+                            <div class="controls">
+                              <div class="col-md-4 col-sm-4 col-xs-12 xdisplay_inputx form-group has-feedback">
+                                <input type="text" class="form-control" id="renovacion" name="renovacion" placeholder="Renovacion" aria-describedby="inputSuccess2Status">
+                                <span class="fa fa-calendar-o form-control-feedback right" aria-hidden="true"></span>
+                                <span id="inputSuccess2Status" class="sr-only">(Exito)</span>
+                              </div>
+                            </div>
+                          </div>                          
+                      </div>
+                      
+                      <br />
+                      <h2>Producto</h2>
+                      <div class="ln_solid"></div>
+                      
+                      <div class="form-group">
                         <label class="control-label col-md-2 col-sm-2 col-xs-12 text-left" for="ramo">
                           Ramo <span class="required">*</span>
                         </label>
@@ -258,13 +353,33 @@ $query = pg_query($conn, $sql);
                           <select id="ramo" name="ramo" class="form-control" required>
                             <option value="">Seleccione...</option>
 <?php
+/* Ramo */
+$sql = "SELECT id, descripcion, vehiculo FROM ramos WHERE id>0 ORDER BY descripcion";
+$query = pg_query($conn, $sql);
 $sel = (pg_numrows($query) == 1)?" selected":"";
 while($row = pg_fetch_assoc($query)) {
   print "<option value=\"{$row['id']}:{$row['vehiculo']}\"$sel>{$row['descripcion']}</option>";
 }
 ?>
                           </select>  
-                        </div>                        
+                        </div>                         
+                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="producto">
+                          Producto <span class="required">*</span>
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12">
+                          <select id="producto" name="producto" class="form-control">
+                            <option value="0">Seleccione...</option>
+<?php
+$sql = "SELECT id, descripcion FROM productos WHERE id>0 ORDER BY descripcion";
+$query = pg_query($conn, $sql);
+$sel = (pg_numrows($query) == 1)?" selected":"";
+while($row = pg_fetch_assoc($query)) {
+  print "<option value=\"{$row['id']}\"$sel>{$row['descripcion']}</option>";
+}
+?>
+                          </select>                          
+                        </div>  
+                       
                       </div>
                       <div id="vehiculo" style="display: none">
                         <div class="form-group">
@@ -298,70 +413,189 @@ while($row = pg_fetch_assoc($query)) {
                             <input type="text" class="form-control" id="year" name="year" placeholder="Año de vehiculo">
                             <span class="fa fa-car form-control-feedback right" aria-hidden="true"></span>
                           </div>
-                        </div>  
+                        </div>
+                        <div class="form-group">
+                          <label class="control-label col-md-2 col-sm-2 col-xs-12" for="chasis">
+                            Chasis
+                          </label>
+                          <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
+                            <input type="text" class="form-control" id="chasis" name="chasis" placeholder="Número de chasis">
+                            <span class="fa fa-car form-control-feedback right" aria-hidden="true"></span>
+                          </div>
+                            <label class="control-label col-md-2 col-sm-2 col-xs-12" for="motor">
+                            Motor 
+                          </label>
+                          <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
+                            <input type="text" class="form-control" id="motor" name="motor" placeholder="Número de motor">
+                            <span class="fa fa-car form-control-feedback right" aria-hidden="true"></span>
+                          </div>
+                        </div>                         
                       </div>
+                      <div id="div-condominio" style="display: none">
+                        <div class="form-group">
+                          <label class="control-label col-md-2 col-sm-2 col-xs-12" for="condominio">
+                            Condominio
+                          </label>
+                          <div class="col-md-10 col-sm-10 col-xs-12 has-feedback">
+                            <input type="text" class="form-control" id="condominio" name="condominio" placeholder="Número/Código de condominio">
+                            <span class="fa fa-building form-control-feedback right" aria-hidden="true"></span>
+                          </div>
+                        </div>                            
+                      </div>
+                      
+                      <br />
+                      <h2>Asegurabilidad</h2>
+                      <div class="ln_solid"></div>
+                      
                       <div class="form-group">
-                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="siniestros">
-                          Siniestros 
+                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="monto-asegurado">
+                          Monto Asegurado 
                         </label>
                         <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
-                          <input type="text" class="form-control" id="siniestros" name="siniestros"
-                                 placeholder="Monto siniestros causados">
+                          <input type="text" class="form-control" id="monto-asegurado" name="monto-asegurado"
+                                 placeholder="Monto asegurado"
+                                 onkeypress="validate_monto(event);">
                           <span class="fa fa-dollar form-control-feedback right" aria-hidden="true"></span>
                         </div>
-                          <label class="control-label col-md-2 col-sm-2 col-xs-12" for="prima">
-                          Prima actual 
-                        </label>
-                        <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
-                          <input type="text" class="form-control" id="prima" name="prima"
-                                 placeholder="Monto prima actual">
-                          <span class="fa fa-dollar form-control-feedback right" aria-hidden="true"></span>
-                        </div>
-                      </div>
-                      <div class="form-group">
                         <label class="control-label col-md-2 col-sm-2 col-xs-12" for="prima-neta">
                           Prima Neta 
                         </label>
                         <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
                           <input type="text" class="form-control" id="prima-neta" name="prima-neta"
-                                 placeholder="Monto prima neta">
+                                 placeholder="Monto prima neta"
+                                 onkeypress="validate_neta(event);"
+                                 onkeyup="$('#prima-neta').trigger('change');">
                           <span class="fa fa-dollar form-control-feedback right" aria-hidden="true"></span>
-                        </div>
-                          <label class="control-label col-md-2 col-sm-2 col-xs-12" for="monto-asegurado">
-                          Monto Asegurado 
-                        </label>
-                        <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
-                          <input type="text" class="form-control" id="monto-asegurado" name="monto-asegurado"
-                                 placeholder="Monto asegurado">
-                          <span class="fa fa-dollar form-control-feedback right" aria-hidden="true"></span>
-                        </div>
+                        </div>                        
                       </div>
                       <div class="form-group">
-                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="vigencia">
-                          Vigencia
-                        </label>                        
-                          <div class="control-group">
-                            <div class="controls">
-                              <div class="col-md-4 col-sm-4 col-xs-12 xdisplay_inputx form-group has-feedback">
-                                <input type="text" class="form-control" id="vigencia" name="vigencia" placeholder="Vigencia" aria-describedby="inputSuccess2Status">
-                                <span class="fa fa-calendar-o form-control-feedback right" aria-hidden="true"></span>
-                                <span id="inputSuccess2Status" class="sr-only">(Exito)</span>
-                              </div>
-                            </div>
-                          </div>
-                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="renovacion">
-                          Renovaci&oacute;n
-                        </label>                        
-                          <div class="control-group">
-                            <div class="controls">
-                              <div class="col-md-4 col-sm-4 col-xs-12 xdisplay_inputx form-group has-feedback">
-                                <input type="text" class="form-control" id="renovacion" name="renovacion" placeholder="Renovacion" aria-describedby="inputSuccess2Status">
-                                <span class="fa fa-calendar-o form-control-feedback right" aria-hidden="true"></span>
-                                <span id="inputSuccess2Status" class="sr-only">(Exito)</span>
-                              </div>
-                            </div>
-                          </div>                          
+                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="prima">
+                          Prima Bruta 
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
+                          <input type="text" class="form-control" id="prima" name="prima"
+                                 placeholder="Monto prima actual"
+                                 onkeypress="validate_actual(event);"
+                                 onkeyup="$('#comision').trigger('change');">
+                          <span class="fa fa-dollar form-control-feedback right" aria-hidden="true"></span>
+                        </div>
+                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="cuota">
+                          Valor Cuota
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
+                          <input type="text" class="form-control" id="cuota" name="cuota"
+                                 placeholder="Monto de la cuota">
+                          <span class="fa fa-dollar form-control-feedback right" aria-hidden="true"></span>
+                        </div>
                       </div>
+
+                      <br />
+                      <h2>Condiciones</h2>
+                      <div class="ln_solid"></div>
+                      
+                      <div class="form-group">
+                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="forma-pago">
+                          Forma de pago
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
+                          <select id="forma-pago" name="forma-pago" class="form-control">
+                            <option value="0">Seleccione...</option>
+<?php
+$sql = "SELECT id, descripcion FROM formas_pago WHERE id>0 ORDER BY descripcion";
+$query = pg_query($conn, $sql);
+$sel = (pg_numrows($query) == 1)?" selected":"";
+while($row = pg_fetch_assoc($query)) {
+  print "<option value=\"{$row['id']}\"$sel>{$row['descripcion']}</option>";
+}
+/* Bloquear campo si el usuario tiene un supervisor */
+$str_bloqueo = '';
+if($id_sup_usr)
+  $str_bloqueo = 'readonly="readonly"';
+?>
+                          </select>   
+                        </div>
+                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="deducible">
+                          Deducible
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
+                          <input type="text" class="form-control" id="deducible" name="deducible"
+                                 placeholder="UF monto deducible">
+                          <span class="fa fa-dollar form-control-feedback right" aria-hidden="true"></span>
+                        </div>
+                      </div>
+                      
+                      <br />
+                      <h2>Remuneraci&oacute;n</h2>
+                      <div class="ln_solid"></div>
+                      
+                      <div class="form-group">
+                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="comision">
+                          Comisi&oacute;n (%) 
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
+                          <input type="text" class="form-control" id="comision" name="comision"
+                                 placeholder="% de comision"
+                                 <?php print $str_bloqueo ?>
+                                 data-toggle="tooltip" data-placement="bottom"
+                                 title="Porcentaje de comisi&oacute;n"
+                                 onkeypress="validate(event);"
+                                 onkeyup="$('#comision').trigger('change');">
+                          <span class="fa fa-percent form-control-feedback right" aria-hidden="true"></span>
+                        </div>
+                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="comision">
+                          Comisi&oacute;n Spartacus 
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
+                          <input type="text" class="form-control" id="comision-corredor" name="comision-corredor"
+                                 placeholder="Monto de comisión Spartacus"
+                                 readonly="readonly"
+                                 data-toggle="tooltip" data-placement="bottom"
+                                 title="Monto de comisi&oacute;n Corredor Spartacus">
+                          <span class="fa fa-money form-control-feedback right" aria-hidden="true"></span>
+                        </div>                          
+                      </div>
+
+                      <div class="form-group">
+                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="comision-valor">
+                          Comisi&oacute;n ($) 
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12 has-feedback">
+                          <input type="text" class="form-control" id="comision-valor" name="comision-valor"
+                                 placeholder="Monto ($) comisión"
+                                 readonly = "readonly"
+                                data-toggle="tooltip" data-placement="bottom"
+                                 title="Valor de comisi&oacute;n en moneda"
+                                 onkeypress="validate(event);">
+                          <span class="fa fa-money form-control-feedback right" aria-hidden="true"></span>
+                        </div>                                                 
+                      </div>                      
+                      
+                      <br />
+                      <h2>Otros</h2>
+                      <div class="ln_solid"></div>
+
+                      <div class="form-group">
+                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="cia">
+                          Compa&ntilde;ia 
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                          <select id="cia" name="cia" class="form-control">
+                            <option value="0">Seleccione...</option>
+<?php
+/* Estados/Etapas de Cotizacion  */
+$sql = "SELECT id, descripcion
+        FROM companias
+        WHERE id>0 
+        ORDER BY descripcion";
+$query = pg_query($conn, $sql);
+while($row = pg_fetch_assoc($query)) {
+  print "<option value=\"{$row['id']}\">{$row['descripcion']}</option>";
+}
+?>
+                          </select>                          
+                        </div>                         
+                      </div>
+                      
                       <div class="form-group">
                           <label class="control-label col-md-2 col-sm-2 col-xs-12" for="observacion">
                             Observaciones
@@ -420,6 +654,7 @@ if($usr_admin == 1 || comprueba($usr_permisos, "11")) {
                       </div>
                       <!--/ Dialogo Modal de confirmacion -->
                       <input type="hidden" id="idcotizacion" name="idcotizacion" value="0">
+                      <input type="hidden" id="comision-usuario" name="comision-usuario" value="<?php print $comision_usuario ?>">
 <?php
 if($cid) {
 ?>
@@ -524,6 +759,21 @@ include('includes/dash-footer.php');
 
 <script>
   $(document).ready(function() {
+    $("#prima, #comision, #prima-neta").on("change", function() {
+      var calCom = parseFloat($("#prima-neta").val()) * parseFloat($("#comision").val()) / 100;
+      var comUsr = parseFloat($("#comision-usuario").val());
+      calCom = calCom * <?php print $valor_uf ?> * 0.85;
+      calCom = isNaN(calCom) ? 0 : calCom; //.toFixed(2);
+      $("#comision-corredor").val(calCom.toLocaleString("es-CL", { style: 'currency', currency: 'CLP', maximumFractionDigits: 2 })).css("color","green");
+      comUsr = isNaN(comUsr) ? 0 : comUsr;
+      comUsr = calCom * comUsr / 100;
+      $("#comision-valor").val(comUsr.toLocaleString("es-CL", { style: 'currency', currency: 'CLP', maximumFractionDigits: 2 })).css("color", "red")
+    });
+    $("#prima-neta").on("change", function() {
+      var calBruta = parseFloat($("#prima-neta").val()) * 1.19;
+      calBruta = isNaN(calBruta) ? 0 : calBruta.toFixed(2);
+      $("#prima").val(calBruta);
+    });
     $("#cierra-frm").click(function() {
       $("#div-frm").toggle();
       if($("#div-frm").is(":hidden"))
@@ -604,10 +854,15 @@ include('includes/dash-footer.php');
     });
     $('#ramo').on("change", function() {
       var esVehiculo = ($(this).val().split(":")[1] === '1');
+      var queRamo = $("#ramo option:selected").text().toLowerCase();
       if(esVehiculo)
         $("#vehiculo").show();
       else
         $("#vehiculo").hide();
+      if(queRamo == "condominios")
+        $("#div-condominio").show();
+      else
+        $("#div-condominio").hide();
     });
     $('#vigencia, #renovacion').daterangepicker({
       "locale": {
@@ -701,7 +956,48 @@ include('includes/dash-footer.php');
     /** Actualizar los tados de la tabla por demanda **/
     $("#up-table").click(function() {
       oTable.fnDraw();
-    });    
+    });
+    /** Buscar provincias y comunas **/
+    /*
+    $("#region, #provincia").change(function () {
+          var id  = $(this).val();
+          var quien = $(this).attr("id");
+          var destino;
+          switch(quien) {
+            case "region":
+              destino = $("#provincia");
+              $("#comuna").html("");
+              break;
+            case "provincia":
+              destino = $("#comuna");
+              break;
+          }          
+          $.ajax({type: 'POST',
+            url: "ajax/traeob.php",
+            async: false,
+            //-- Mostrar icono de espera mientras llega respuesta del script php
+            beforeSend:
+              function() {
+                $.showLoading({name: 'jump-pulse',allowHide: false});			
+              },
+            data: {
+                'objeto': quien,
+                'id'    : id
+              },
+            //-- Colocar respuesta del script php en el marco DIV indicado
+            success:
+              function(result){
+                destino.html(result);
+                $.hideLoading();
+              }
+          });           
+          
+    });
+    */
+    $("[id='comision']").keypress(validate);
+    $("[id='prima']").keypress(validate_actual);
+    $("[id='prima-neta']").keypress(validate_neta);
+    $("[id='monto-asegurado']").keypress(validate_monto);
 		window.api = $.fileuploader.getInstance(input); 
 <?php
 if($cid) {
@@ -721,21 +1017,33 @@ if($cid) {
     var ruta=document.frm_cliente;
     var $myForm = $('#frm-cliente');
     var eFile = false;
+    var ePoliza = false;
     var el2 = $("#adjunto-file").parsley();
+    var el3 = $("#poliza").parsley();
     if (typeof paramGuardarNuevo === 'undefined') paramGuardarNuevo = 0;
     SalvarNuevo = paramGuardarNuevo;
     if(api.getFiles().length === 0) {
       if($("#poliza").val().length >= 5)
         eFile = true;
       if($("#etapa").children(":selected").attr("is-attach") == 'si')
-        eFile = true;
+        eFile = true;      
     }
+    
     el2.removeError('forcederror', {updateClass: true});
     $(el2.ulError).empty();      
     if(eFile) {
       el2.addError('forcederror', {message: 'Debe adjuntar un archivo para continuar'});
       return false;
+    }
+    if($("#etapa").children(":selected").attr("is-poliza") == 'si')
+      ePoliza = true;      
+    el3.removeError('forcederror', {updateClass: true});
+    $(el3.ulError).empty();      
+    if(ePoliza === true && $("#poliza").val() === "") {
+      el3.addError('forcederror', {message: 'La poliza es requerida en esta etapa'});
+      return false;
     }    
+    
     if(ruta.checkValidity()) {
       $('#modConfirma').modal({backdrop: "static"});
     } else {
@@ -811,4 +1119,61 @@ if($cid) {
         }
     });    
   }
+  //-- Validar campo numerico
+  function validate(evt) {
+     var key = window.event ? evt.keyCode : evt.which;
+     var valor = document.getElementById("comision").value;
+     if (key === 8 || key === 46) {
+      if(key === 46 && valor.indexOf('.') >= 0 ) {
+        return false;
+      }
+      return true;
+     } else if ( key < 48 || key > 57 ) {
+       return false;
+     } else {
+       return true;
+     }
+  }
+  function validate_actual(evt) {
+     var key = window.event ? evt.keyCode : evt.which;
+     var valor = document.getElementById("prima").value;
+     if (key === 8 || key === 46) {
+      if(key === 46 && valor.indexOf('.') >= 0 ) {
+        return false;
+      }
+      return true;
+     } else if ( key < 48 || key > 57 ) {
+       return false;
+     } else {
+       return true;
+     }
+  }
+  function validate_neta(evt) {
+     var key = window.event ? evt.keyCode : evt.which;
+     var valor = document.getElementById("prima-neta").value;
+     if (key === 8 || key === 46) {
+      if(key === 46 && valor.indexOf('.') >= 0 ) {
+        return false;
+      }
+      return true;
+     } else if ( key < 48 || key > 57 ) {
+       return false;
+     } else {
+       return true;
+     }
+  }
+  function validate_monto(evt) {
+     var key = window.event ? evt.keyCode : evt.which;
+     var valor = document.getElementById("monto-asegurado").value;
+     if (key === 8 || key === 46) {
+      if(key === 46 && valor.indexOf('.') >= 0 ) {
+        return false;
+      }
+      return true;
+     } else if ( key < 48 || key > 57 ) {
+       return false;
+     } else {
+       return true;
+     }
+  }   
 </script>

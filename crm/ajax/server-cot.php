@@ -6,6 +6,7 @@
 	$idusuario    = $_SESSION['uid'];
 	$usr_admin    = $_SESSION['admin'];
 	$usr_nombre   = $_SESSION['nombre'];
+	$id_campaign  = $_SESSION['campaign'];
 	include_once('../../includes/funciones.php');
 	include_once('../../includes/conn.php');
 	if(file_exists('../../includes/tools.php'))
@@ -163,6 +164,8 @@
 	 * SQL queries
 	 * Get data to display
 	 */	
+	if($id_campaign)
+		$sql_campaign = " AND ( p.idcampaign = $id_campaign OR p.idetapa IN(50, 51, 44, 46, 47, 48) ) "; 
 	$sQuery = "
 		SELECT *
 			,count(*) OVER() AS total_count
@@ -191,8 +194,8 @@
 			LEFT JOIN cotizacion_vehiculos cv ON(cv.idcotizacion = p.id)
 			WHERE p.id>0
 				$sWhere
-				AND ( $usr_admin = 1 $usr_cotizaciones OR u.idsupervisor = $idusuario)
-				$usr_etapas			
+				AND ( $usr_admin = 1 $usr_cotizaciones $usr_etapas OR u.idsupervisor = $idusuario)
+				$sql_campaign
 		) AS t
 		$sOrder
 		$sLimit
@@ -214,8 +217,11 @@
 	/* Total data set length */
 	$sQuery = "
 		SELECT count(*) AS total_records
-		FROM cotizacion
-		WHERE id>0
+		FROM cotizacion p
+		WHERE p.id>0
+		AND ( $usr_admin=1 OR p.idejecutivo = $idusuario)
+		$usr_etapas
+		$sql_campaign
 	";
 	
 	$rResultTotal = pg_query($conn, $sQuery);
@@ -286,7 +292,7 @@
 		$row[] = $contacto;
 		$row[] = $auto;
 		$row[] = $aRow['etapa'];
-		$row[] = number_format($aRow['prima_actual'], 2, ',', '.');
+		$row[] = number_format($aRow['prima_neta'], 2, ',', '.');
 		$row[] = $aRow['vigencia'];
 		$row[] = $aRow['ejecutivo'];
 		$row[] = $link_edit . $link_delete;

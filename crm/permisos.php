@@ -95,10 +95,14 @@ while($row = pg_fetch_assoc($query)) {
                                 <ol>
                                   <li><input id="chkmenu0301" type="checkbox" value='13' /> Cargos</li>
                                   <li><input id="chkmenu0302" type="checkbox" value='14' /> Categorias/Ejecutivos</li>
+                                  <li><input id="chkmenu0350" type="checkbox" value='26' /> Compa&ntilde;ias de seguros</li>
                                   <li><input id="chkmenu0303" type="checkbox" value='15' /> Corredores</li>
                                   <li><input id="chkmenu0304" type="checkbox" value='16' /> Embudo de Ventas</li>
                                   <li><input id="chkmenu0305" type="checkbox" value='17' /> Fases de Clientes</li>
+                                  <li><input id="chkmenu0349" type="checkbox" value='25' /> Formas de pago</li>
+                                  <li><input id="chkmenu0351" type="checkbox" value='27' /> Gestionar Campa&ntilde;a</li>                                  
                                   <li><input id="chkmenu0306" type="checkbox" value='18' /> Monedas</li>
+                                  <li><input id="chkmenu0348" type="checkbox" value='24' /> Productos</li>
                                   <li><input id="chkmenu0307" type="checkbox" value='19' /> Ramos</li>
                                   <li><input id="chkmenu0308" type="checkbox" value='20' /> Sucursales</li>
                                 </ol>

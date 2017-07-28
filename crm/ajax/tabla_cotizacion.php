@@ -17,6 +17,7 @@ if(file_exists('../includes/tools.php'))
 	
 //-- Verificar permisos sobre etapas
 $usr_permisos = $_SESSION['permisos'] ?? '';
+$id_campaign = $_SESSION['campaign'] ?? 0;
 $usr_etapas   = '';
 $usr_cotizaciones = '';
 if($usr_permisos && !$usr_admin) {
@@ -80,24 +81,37 @@ $contacto  	  	 = isset($_POST['nom-contacto'])?$_POST['nom-contacto']:'';
 $telefono 	  	 = isset($_POST['telefono'])?$_POST['telefono']:'';
 $movil 		  	 = isset($_POST['movil'])?$_POST['movil']:'';
 $email 	 	  	 = isset($_POST['email'])?$_POST['email']:'';
+$direccion		 = isset($_POST['direccion'])?$_POST['direccion']:'';
+$region			 = isset($_POST['region'])?$_POST['region']:'';
+$provincia		 = isset($_POST['provincia'])?$_POST['provincia']:'';
+$comuna			 = isset($_POST['comuna'])?$_POST['comuna']:'';
 $etapa	  	  	 = isset($_POST['etapa'])?$_POST['etapa']:0;
 $sucursal	  	 = isset($_POST['sucursal'])?$_POST['sucursal']:0;
 $corredor 	  	 = isset($_POST['corredor'])?$_POST['corredor']:0;
+$producto		 = isset($_POST['producto'])?$_POST['producto']:0;
 $ejecutivo	  	 = isset($_POST['ejecutivo'])?$_POST['ejecutivo']:0;
 $ramo		  	 = isset($_POST['ramo'])?$_POST['ramo']:0;
 $patente	  	 = isset($_POST['patente'])?$_POST['patente']:'';
 $marca	  	  	 = isset($_POST['marca'])?$_POST['marca']:'';
 $modelo	  	  	 = isset($_POST['modelo'])?$_POST['modelo']:'';
 $year		  	 = isset($_POST['year'])?$_POST['year']:'';
+$chasis		  	 = isset($_POST['chasis'])?$_POST['chasis']:'';
+$motor		  	 = isset($_POST['motor'])?$_POST['motor']:'';
+$condominio		 = isset($_POST['condominio'])?$_POST['condominio']:'';
 $siniestros	  	 = isset($_POST['siniestros'])?$_POST['siniestros']:0.00;
 $prima	  	  	 = isset($_POST['prima'])?$_POST['prima']:0.00;
 $prima_neta	  	 = isset($_POST['prima-neta'])?$_POST['prima-neta']:0.00;
+$cuota			 = isset($_POST['cuota'])?$_POST['cuota']:0.00;
 $monto_asegurado = isset($_POST['monto-asegurado'])?$_POST['monto-asegurado']:0.00;
 $comision 		 = isset($_POST['comision'])?$_POST['comision']:0.00;
 $vigencia		 = isset($_POST['vigencia'])?$_POST['vigencia']:'01/01/2017';
 $renovacion		 = isset($_POST['renovacion'])?$_POST['renovacion']:'01/01/2017';
 $comentarios	 = isset($_POST['comentarios'])?$_POST['comentarios']:'';
 $poliza	 		 = isset($_POST['poliza'])?$_POST['poliza']:'';
+$forma_pago		 = isset($_POST['forma-pago'])?$_POST['forma-pago']:0;
+$deducible		 = isset($_POST['deducible'])?$_POST['deducible']:'';
+$idcompania		 = isset($_POST['cia'])?$_POST['cia']:0;
+
 $id_eliminar 	 = isset($_POST['id-eliminar'])?$_POST['id-eliminar']:0;
 $nuevo		 = true;
 //-- concatenados
@@ -107,6 +121,7 @@ $ramo = strpos($ramo, ':')?explode(':', $ramo)[0]:0;
 $siniestros 	 = is_numeric($siniestros)?$siniestros:0.00;
 $prima			 = is_numeric($prima)?$prima:0.00;
 $prima_neta 	 = is_numeric($prima_neta)?$prima_neta:0.00;
+$cuota			 = is_numeric($cuota)?$cuota:0.00;
 $monto_asegurado = is_numeric($monto_asegurado)?$monto_asegurado:0.00;
 $comision 		 = is_numeric($comision)?$comision:0.00;
 
@@ -156,13 +171,15 @@ $sw = 1;
 if($rut && !$idcotizacion) {
 	//-- Scripts para crear nueva Cotizacion
 	$sql = "INSERT INTO cotizacion(idcliente,idsucursal,idcorredor,idramo,idejecutivo,
-				siniestros,prima_actual,vigencia,renovacion,prima_neta,
-				monto_asegurado,comision,observacion,
-				poliza,idetapa,idusuario)
+				siniestros,prima_actual,vigencia,renovacion, prima_neta, cuota,
+				monto_asegurado,comision_corredor,observacion,
+				poliza,idetapa,idusuario, idproducto,
+				deducible, idforma_pago, idcompania)
 			VALUES ($idcliente,$sucursal,$corredor,$ramo,$ejecutivo,
-				$siniestros,$prima,'$vigencia'::text::date,'$renovacion'::text::date,$prima_neta,
+				$siniestros,$prima,'$vigencia'::text::date,'$renovacion'::text::date,$prima_neta, $cuota,
 				$monto_asegurado, $comision, '$comentarios'::text,
-				'$poliza',$etapa,$idusuario)
+				'$poliza',$etapa, $idusuario, $producto,
+				'$deducible', $forma_pago, $idcompania)
 			RETURNING id;";
 	$texto  = "creado";
 	$texto2 = "crear";
@@ -179,13 +196,18 @@ if($rut && !$idcotizacion) {
 				,vigencia = '$vigencia'::text::date
 				,renovacion = '$renovacion'::text::date
 				,prima_neta = $prima_neta
+				,cuota = $cuota
 				,monto_asegurado = $monto_asegurado
-				,comision = $comision
+				,comision_corredor = $comision
 				,observacion = '$comentarios'::text
 				,poliza = '$poliza'
 				,idetapa = $etapa
 				,idusuario_mod = $idusuario
 				,fecha_mod = NOW()
+				,idproducto = $producto
+				,deducible = '$deducible'
+				,idforma_pago = $forma_pago
+				,idcompania = $idcompania
 			WHERE id = $idcotizacion
 			RETURNING id";
 	$texto  = "actualizado";
@@ -196,15 +218,17 @@ if($rut && !$idcotizacion) {
 }
 
 if($sw) {
-	$tran = pg_query($conn, $sql);
+	$tran = pg_query($conn, $sql) or die("Error con Base de datos<br />$sql");
 	if($fila = pg_fetch_assoc($tran)) {
 		$idcotizacion = $fila['id'];
 		if($idcliente) {
 			$sql  = "DELETE FROM clientes_contactos WHERE idcliente = $idcliente";
 			$tran = pg_query($conn, $sql);
-			if($telefono || $movil || $email || $contacto) {
-				$sql = "INSERT INTO clientes_contactos(idcliente, nombre, telefono, movil, email, idusuario)
-						VALUES($idcliente, '$contacto', '$telefono', '$movil', '$email', $idusuario)";
+			if($telefono || $movil || $email || $contacto || $direccion || $region || $provincia || $comuna) {
+				$sql = "INSERT INTO clientes_contactos(idcliente, nombre, telefono, movil, email, idusuario,
+							direccion, region, provincia, comuna)
+						VALUES($idcliente, '$contacto', '$telefono', '$movil', '$email', $idusuario,
+							UPPER('$direccion'), UPPER('$region'), UPPER('$provincia'), UPPER('$comuna'))";
 				if(!$tran = pg_query($conn, $sql)) {
 					$str_error = "el cliente no se ha podido actualizar, intente mas tarde";
 				}
@@ -213,11 +237,20 @@ if($sw) {
 		}
 		$sql = "DELETE FROM cotizacion_vehiculos WHERE idcotizacion = $idcotizacion";
 		$tran = pg_query($conn, $sql);
-		if($patente || $marca || $modelo || $year) {
-			$sql = "INSERT INTO cotizacion_vehiculos(idcotizacion, patente, marca, modelo, year)
-					VALUES($idcotizacion, '$patente', '$marca', '$modelo', '$year')";
+		if($patente || $marca || $modelo || $year || $chasis || $motor) {
+			$sql = "INSERT INTO cotizacion_vehiculos(idcotizacion, patente, marca, modelo, year, chasis, motor)
+					VALUES($idcotizacion, '$patente', '$marca', '$modelo', '$year', '$chasis', '$motor')";
 			if(!$tran = pg_query($conn, $sql)) {
 				$str_error = "La cotizaci&oacute;n no se ha podido actualizar, intente mas tarde";
+			}			
+		}
+		$sql = "DELETE FROM cotizacion_condominios WHERE idcotizacion = $idcotizacion";
+		$tran = pg_query($conn, $sql);
+		if($condominio) {
+			$sql = "INSERT INTO cotizacion_condominios(idcotizacion, codigo)
+					VALUES($idcotizacion, '$condominio')";
+			if(!$tran = pg_query($conn, $sql)) {
+				$str_error = "La cotizaci&oacute;n no se ha podido actualizar (condominio), intente mas tarde";
 			}			
 		}
 		//-- bof Manipulacion de adjuntos

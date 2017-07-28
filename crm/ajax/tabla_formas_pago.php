@@ -1,5 +1,5 @@
 <?php
-if(!isset($etapas)) {
+if(!isset($formas)) {
 	session_start();
 	if(!isset($_SESSION['usuario'])) {
 		header("location: ../page_403.html");
@@ -7,66 +7,59 @@ if(!isset($etapas)) {
 	include('../../includes/funciones.php');
 	include('../../includes/conn.php');
 }
-$id_etapa 	 = isset($_POST['id_etapa'])?$_POST['id_etapa']:0;
+$id_fp = isset($_POST['id_fp'])?$_POST['id_fp']:0;
 $descripcion = isset($_POST['descripcion'])?$_POST['descripcion']:'';
-$orden		 = isset($_POST['orden'])?$_POST['orden']:1;
-$adjunto	 = isset($_POST['adjunto'])?($_POST['adjunto']=='on')?'true':'false':'false';
-$masivo		 = isset($_POST['masivo'])?($_POST['masivo']=='on')?'true':'false':'false';
-$poliza		 = isset($_POST['poliza'])?($_POST['poliza']=='on')?'true':'false':'false';
-$estado		 = isset($_POST['estado'])?($_POST['estado']=='on')?1:0:0;
 $id_eliminar = isset($_POST['id-eliminar'])?$_POST['id-eliminar']:0;
 $nuevo		 = true;
 
 if($id_eliminar) {
-	$sql   = "DELETE FROM etapas_venta WHERE id=$id_eliminar";
+	$sql   = "DELETE FROM formas_pago WHERE id=$id_eliminar";
 	$query = pg_query($conn, $sql);
 }
 
-//-- Verificamos si viene $id_etapa para crear nuevo registro o editar
-if(!$id_etapa && $descripcion) {
-	$sql = "INSERT INTO etapas_venta(descripcion, orden, masivo, estado, adjunto, poliza)
-		    SELECT '$descripcion', $orden, $masivo, $estado, $adjunto, $poliza
-			WHERE NOT EXISTS(SELECT id FROM etapas_venta
+//-- Verificamos si viene $id_ramo para crear nuevo registro o editar
+if(!$id_fp && $descripcion) {
+	$sql = "INSERT INTO formas_pago(descripcion)
+		    SELECT '$descripcion'
+			WHERE NOT EXISTS(SELECT id FROM formas_pago
 					         WHERE UPPER(descripcion)=UPPER('$descripcion')
 							)
 			RETURNING id";
 
-} elseif($id_etapa && $descripcion) {
+} elseif($id_fp && $descripcion) {
 	$nuevo = false;
-	$sql="UPDATE etapas_venta SET
-			descripcion='$descripcion',
-			orden=$orden,
-			adjunto=$adjunto,
-			masivo=$masivo,
-			estado=$estado,
-			poliza=$poliza
-		  WHERE id=$id_etapa
+	$sql="UPDATE formas_pago SET
+			descripcion='$descripcion'
+		  WHERE id=$id_fp
 		  RETURNING id";
 }
 if($descripcion) {
 	$query = pg_query($conn, $sql);
 	if($row = pg_fetch_assoc($query))
-		$id_etapa = $row['id'];
+		$id_ramo = $row['id'];
 }
 
 //-- Buscar datos para rellenar la tabla
-$sql = "SELECT id, descripcion, orden, adjunto, masivo, estado, poliza
-		FROM etapas_venta
-		ORDER BY orden";
+$sql = "SELECT id, descripcion
+		FROM formas_pago
+		WHERE id > 0
+		ORDER BY descripcion";
 $query= pg_query($conn, $sql);
 if(!$nuevo) {
 ?>
-	<input type="hidden" name="id-etapa" id="id-etapa" value="<?php print $id_etapa ?>" />
+	<input type="hidden" name="id-fp" id="id-fp" value="<?php print $id_fp ?>" />
 <?php
 }
 ?>
 <div class="table-responsive">
-  <table class="table table-striped jambo_table bulk_action" id="tbl-etapas">
+  <table class="table table-striped jambo_table bulk_action" id="tbl-productos">
     <thead>
       <tr class="headings">
-        <th class="column-title text-center">Orden  </th>
-        <th class="column-title text-left">Descripci&oacute;n </th>
-        <th class="column-title no-link last text-center" colspan="2"><span class="nobr">Acci&oacute;n</span>
+        <th class="column-title text-left">
+			Descripci&oacute;n
+		</th>
+        <th class="column-title no-link last text-center" colspan="2">
+			<span class="nobr">Acci&oacute;n</span>
         </th>
       </tr>
     </thead>
@@ -84,10 +77,9 @@ $act = 1;
 while($fila = pg_fetch_assoc($query)) {
 	$clase = (($act%2)==0)?"odd pointer":"even pointer";
 	$token = md5($fila['id'].'ajbc');
-	$url   = "id={$fila['id']}&token=$token&orden={$fila['orden']}&adjunto={$fila['adjunto']}&masivo={$fila['masivo']}&poliza={$fila['poliza']}&estado={$fila['estado']}&descripcion={$fila['descripcion']}";
+	$url   = "id={$fila['id']}&token=$token&descripcion={$fila['descripcion']}";
 ?>
       <tr class="<?php print $clase ?>">
-        <td class=" text-center"><strong><?php print  $fila['orden'] ?></strong></td>
         <td class=" text-left"><?php print $fila['descripcion'] ?></td>
 		<td class=" last text-center">
 			<a href="?acc=edit&<?php print $url ?>"

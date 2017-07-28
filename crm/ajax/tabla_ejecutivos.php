@@ -20,6 +20,7 @@ $direccion	 = isset($_POST['direccion'])?$_POST['direccion']:'';
 $cargo 	 	 = isset($_POST['cargo'])?$_POST['cargo']:0;
 $nivel	 	 = isset($_POST['nivel'])?$_POST['nivel']:0;
 $sucursal 	 = isset($_POST['sucursal'])?$_POST['sucursal']:0;
+$comision	 = isset($_POST['comision'])?$_POST['comision']:0.00;
 $esUsuario 	 = isset($_POST['usuario'])?$_POST['usuario']:0;
 $uname 	 	 = isset($_POST['uname'])?$_POST['uname']:'';
 $clave 	 	 = isset($_POST['clave'])?$_POST['clave']:'';
@@ -53,9 +54,9 @@ $sw = 1;
 if($rut && $nombre && !$idejecutivo) {
 	//-- Scripts para crear cliente nuevo
 	$sql = "INSERT INTO usuarios(rut, nombre, uname, clave, apellidos, telefono, movil, email, direccion,
-								 ingreso, idnivel, idcargo, idsucursal, idusuario, estado, idsupervisor)
+								 ingreso, idnivel, idcargo, idsucursal, idusuario, estado, idsupervisor, comision)
 			SELECT '$rut', '$nombre', '$uname', md5('$clave'), '$apellidos', '$telefono', '$movil',
-				'$email', '$direccion', $ingreso, $nivel, $cargo, $sucursal, $idusuario, $esUsuario, $supervisor
+				'$email', '$direccion', $ingreso, $nivel, $cargo, $sucursal, $idusuario, $esUsuario, $supervisor, $comision
 			WHERE NOT EXISTS(SELECT id FROM usuarios WHERE rut='$rut')
 			RETURNING id";
 	$texto  = "creado";
@@ -79,6 +80,7 @@ if($rut && $nombre && !$idejecutivo) {
 				,idusuario = $idusuario
 				,estado	   = $esUsuario
 				,idsupervisor = $supervisor
+				,comision  = $comision
 			WHERE id = $idejecutivo
 			RETURNING id";
 	$texto  = "actualizado";

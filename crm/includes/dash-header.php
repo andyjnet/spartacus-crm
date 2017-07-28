@@ -10,6 +10,8 @@ $idusuario	  = isset($_SESSION['uid'])?$_SESSION['uid']:0;
 $usr_nombre	  = isset($_SESSION['nombre'])?$_SESSION['nombre']:'';
 $usr_admin	  = $_SESSION['admin'] ?? 0;
 $usr_permisos = $_SESSION['permisos'] ?? '';
+$id_campaign  = $_SESSION['campaign'] ?? 0;
+$valor_uf	  = $_SESSION['valor_uf'] ?? 0;
 if($usr_permisos) {
 	$access    = explode(",", $usr_permisos);
 	$cotiza    = false;
@@ -147,21 +149,25 @@ if($usr_admin == 1 || comprueba($usr_permisos, "-1")
 ?>
 				  </ul>
 				</div>
-
+				
+				<div class="menu_section">
+				  <h3>Informes</h3>
+				  <ul class="nav side-menu">				  
 <?php
 if($usr_admin == 1) {
 ?>
-				<div class="menu_section">
-				  <h3>Informes</h3>
-				  <ul class="nav side-menu">
 					<li>
 					  <a href="informe001.php"><i class="fa fa-line-chart"></i> Gestion</a>
-					</li>
-				  </ul>
-				</div>			  
+					</li>  
 <?php
 }
 ?>
+					<li>
+					  <a href="informe002.php"><i class="fa fa-money"></i> Comisiones</a>
+					</li>
+					
+				  </ul>		
+				</div>	
               <div class="menu_section">
 <?php
 if($usr_admin == 1 || $configura) {
@@ -195,6 +201,11 @@ if($usr_admin == 1 || comprueba($usr_permisos, "14")) {
 					  <li><a href="niveles.php">Categorias / Ejecutivos</a></li>
 <?php
 }
+if($usr_admin == 1 || comprueba($usr_permisos, "26")) {
+?>					  
+					  <li><a href="companias.php">Compa&ntilde;ias de seguros</a></li>
+<?php
+}
 if($usr_admin == 1 || comprueba($usr_permisos, "15")) {
 ?>					  
 					  <li><a href="corredores.php">Corredores</a></li>
@@ -210,9 +221,24 @@ if($usr_admin == 1 || comprueba($usr_permisos, "17")) {
 					  <li><a href="fases_cl.php">Fases de Clientes</a></li>
 <?php
 }
+if($usr_admin == 1 || comprueba($usr_permisos, "25")) {
+?>	
+					  <li><a href="formas_pago.php">Formas de pago</a></li>
+<?php
+}
+if($usr_admin == 1 || comprueba($usr_permisos, "27")) {
+?>	
+					  <li><a href="campaign.php">Gestionar Campa&ntilde;as</a></li>
+<?php
+}
 if($usr_admin == 1 || comprueba($usr_permisos, "18")) {
 ?>						  
                       <li><a href="currency.php">Monedas</a></li>
+<?php
+}
+if($usr_admin == 1 || comprueba($usr_permisos, "24")) {
+?>
+					  <li><a href="producto.php">Productos</a></li>
 <?php
 }
 if($usr_admin == 1 || comprueba($usr_permisos, "19")) {
@@ -286,7 +312,7 @@ if($usr_admin == 1 || comprueba($usr_permisos, "23")) {
                 <a id="menu_toggle"><i class="fa fa-bars"></i></a>
               </div>
 
-              <ul class="nav navbar-nav navbar-right">
+              <ul class="nav navbar-nav navbar-right">				
                 <li class="">
                   <a href="javascript:;" class="user-profile dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
                     <?php print $usr_nombre ?>
@@ -297,6 +323,11 @@ if($usr_admin == 1 || comprueba($usr_permisos, "23")) {
                     <li><a href="logout.php"><i class="fa fa-sign-out pull-right"></i>Cerrar Sesi&oacute;n</a></li>
                   </ul>
                 </li>
+				<li class="">
+					<a href="javascript:;" class="user-profile dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+					 UF ($): <strong><?php print number_format($valor_uf, 2, ",", ".") ?></strong>
+					</a>
+				</li>				
               </ul>
             </nav>
           </div>

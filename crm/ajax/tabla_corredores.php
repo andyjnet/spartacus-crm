@@ -42,6 +42,7 @@ if($descripcion) {
 //-- Buscar datos para rellenar la tabla
 $sql = "SELECT id, descripcion
 		FROM corredores
+		WHERE id > 0
 		ORDER BY descripcion";
 $query= pg_query($conn, $sql);
 if(!$nuevo) {

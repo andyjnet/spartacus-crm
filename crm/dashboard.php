@@ -9,6 +9,7 @@ date_trunc('week', NOW() - interval '1 week')::DATE AS lunes_pasado,
 date_trunc('week', NOW() - interval '1 week')::date+6 AS domingo
  */
 
+ /******** Consulta eliminada
 //-- Clientes
 $sql = "SELECT t.total,
           (CASE WHEN total > 0 THEN (t.semana*100/t.total) - (t.sem_pasada*100/t.total) ELSE 0 END) AS diferencia
@@ -30,8 +31,58 @@ if($row = pg_fetch_assoc($query)) {
   $total_clientes = $row['total'];
   $dif_clientes   = $row['diferencia'];
 }
-  
+********/
+//-- Valores / Resumen
+$sql = "SELECT c.idetapa, 
+          SUM((CASE WHEN c.idetapa=44 THEN c.prima_neta ELSE 0 END)) AS enviado_cotizar,
+          SUM((CASE WHEN c.idetapa=46 THEN c.prima_neta ELSE 0 END)) AS cotizacion,
+          SUM((CASE WHEN idetapa=44 THEN 1 ELSE 0 END)) AS cant_enviado,
+          SUM((CASE WHEN idetapa=46 THEN 1 ELSE 0 END)) AS cant_cotizacion          
+        FROM cotizacion c
+          INNER JOIN usuarios u ON(c.idejecutivo = u.id)
+        WHERE idetapa IN(44, 46)
+          AND (idejecutivo = $idusuario OR $usr_admin = 1 OR u.idsupervisor = $idusuario)
+        GROUP BY idetapa";
+$query = pg_query($conn, $sql);
+$sum_enviado    = 0;
+$sum_cotizacion = 0;
+$can_enviado    = 0;
+$can_cotizacion = 0;  
+while($row = pg_fetch_assoc($query)) {
+  switch($row['idetapa']) {
+    case 44:
+      $sum_enviado    = $row['enviado_cotizar'];
+      $can_enviado    = $row['cant_enviado'];
+      break;
+    case 46:
+      $sum_cotizacion = $row['cotizacion'];
+      $can_cotizacion = $row['cant_cotizacion'];
+  }
+} 
+
+
 //-- Cotizaciones
+$usr_permisos = $_SESSION['permisos'] ?? '';
+$sql_etapas   = '';
+if($usr_permisos && !$usr_admin) {
+  $access = explode(",", $usr_permisos);
+  foreach ($access as $item) {
+    if(intval($item) > 1000) {
+      $sql_etapas .= (intval($item) - 1000).',';
+    }
+  }
+  if($sql_etapas) {
+    $sql_etapas = substr($sql_etapas, 0, strlen($sql_etapas) - 1);
+    $sql_etapas = " OR c.idetapa IN($sql_etapas) ";
+  } 
+} else {
+  $access = array("");
+}
+
+$sql_campaign = '';
+if($id_campaign) {
+  $sql_campaign = " AND (c.idcampaign = $id_campaign  OR c.idetapa IN(50, 51, 44, 46, 47, 48)) ";
+}
 $sql = "SELECT t.total,
           (CASE WHEN total > 0 THEN (t.semana*100/t.total) - (t.sem_pasada*100/t.total) ELSE 0 END) AS diferencia
         FROM (
@@ -47,6 +98,8 @@ $sql = "SELECT t.total,
             INNER JOIN usuarios u ON(c.idejecutivo = u.id)
           WHERE c.id>0
             AND (c.idejecutivo = $idusuario OR $usr_admin = 1 OR u.idsupervisor = $idusuario)
+            $sql_campaign
+            $sql_etapas
         ) AS t";
 $query = pg_query($conn, $sql);
 if($row = pg_fetch_assoc($query)) {
@@ -58,18 +111,7 @@ if($row = pg_fetch_assoc($query)) {
 <div class="right_col" role="main">
     <!-- top tiles -->
     <div class="row top_tiles">
-      <div class="animated flipInY col-lg-6 col-md-6 col-sm-6 col-xs-12">
-        <div class="tile-stats">
-          <div class="icon"><i class="fa fa-users"></i></div>
-          <div class="count"><?php print $total_clientes ?></div>
-          <h3>Clientes</h3>
-          <p><span class="count_bottom"><i class="<?php print ($dif_clientes > 0)?'green':'red' ?>">
-            <i class="fa fa-sort-<?php print ($dif_clientes > 0)?'asc':'desc' ?>"></i>
-            <?php print $dif_clientes ?>% </i> Desde la semana pasada</span>
-          </p>
-        </div>
-      </div>
-      <div class="animated flipInY col-lg-6 col-md-6 col-sm-6 col-xs-12">
+      <div class="animated flipInY col-lg-4 col-md-4 col-sm-4 col-xs-12">
         <div class="tile-stats">
           <div class="icon"><i class="fa fa-calculator"></i></div>
           <div class="count"><?php print $total_cotizacion ?></div>
@@ -79,7 +121,28 @@ if($row = pg_fetch_assoc($query)) {
             <?php print $dif_cotizaciones ?>% </i> Desde la semana pasada</span>
           </p>          
         </div>
+      </div>      
+      <div class="animated flipInY col-lg-4 col-md-4 col-sm-4 col-xs-12">
+        <div class="tile-stats">
+          <div class="icon"><i class="fa fa-send"></i></div>
+          <div class="count"><?php print $can_enviado ?></div>
+          <h3>Enviado a Cotizar</h3>
+          <p><span class="count_bottom">
+            <strong><?php print number_format($sum_enviado,"2",",",".") ?></strong> UF</span>
+          </p>
+        </div>
       </div>
+      <div class="animated flipInY col-lg-4 col-md-4 col-sm-4 col-xs-12">
+        <div class="tile-stats">
+          <div class="icon"><i class="fa fa-money"></i></div>
+          <div class="count"><?php print $can_cotizacion ?></div>
+          <h3>Por Cerrar</h3>
+          <p><span class="count_bottom">
+            <strong><?php print number_format($sum_cotizacion,"2",",",".") ?></strong> UF</span>
+          </p>
+        </div>
+      </div>      
+
     </div>
     <!-- /top tiles -->
     <div class="row">
@@ -117,13 +180,16 @@ if(isset($leyenda)) {
 } else {
   $leyenda = "'Sin Datos'";
 }
+
 $sql = "SELECT e.descripcion AS etapa, COUNT(*) AS cantidad
         FROM cotizacion c
           INNER JOIN etapas_venta e ON(c.idetapa=e.id)
           INNER JOIN usuarios u ON(c.idejecutivo = u.id)
-        WHERE c.idejecutivo = $idusuario
+        WHERE (c.idejecutivo = $idusuario
           OR $usr_admin = 1
-          OR u.idsupervisor = $idusuario
+          OR u.idsupervisor = $idusuario)
+          $sql_campaign
+          $sql_etapas
         GROUP BY e.descripcion, e.orden
         ORDER BY e.orden";
 $query = pg_query($conn, $sql);      

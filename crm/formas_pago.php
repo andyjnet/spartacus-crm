@@ -9,27 +9,22 @@ $acc = isset($_GET['acc'])?$_GET['acc']:'';
 if($acc) {
   $token     = isset($_GET['token'])?$_GET['token']:'';
   $id        = isset($_GET['id'])?$_GET['id']:0;
-  $orden     = isset($_GET['orden'])?$_GET['orden']:1;
-  $adjunto   = isset($_GET['adjunto'])?$_GET['adjunto']:'f';
-  $masivo    = isset($_GET['masivo'])?$_GET['masivo']:'f';
-  $poliza    = isset($_GET['poliza'])?$_GET['poliza']:'f';
-  $estado    = isset($_GET['estado'])?$_GET['estado']:1;
   $des       = isset($_GET['descripcion'])?$_GET['descripcion']:'';
   $token_chk = md5($id.'ajbc');
 }
 
 //-- Verificamos que hay accion y el token corresponde
 if ($acc && $token != $token_chk) {
-  unset($id, $token, $orden, $adjunto, $masivo, $estado, $des, $acc, $token_chk);
+  unset($id, $token, $vehiculo, $des, $acc, $token_chk);
   $str_error = "Accion rechazada, token incorrecto!";
 }
 
 //-- Buscar orden inicial para seleccion
-$sql = "SELECT COUNT(*) AS cantidad FROM etapas_venta";
+$sql = "SELECT COUNT(*) AS cantidad FROM formas_pago WHERE id>0";
 $query = pg_query($conn, $sql);
 $cantidad = 1;
 if($fila = pg_fetch_assoc($query)) {
-  $etapas = $fila['cantidad'];
+  $formas = $fila['cantidad'];
 }
 //$cantidad = ($etapas==0)?1:$etapas+1;
 $cantidad = 10;
@@ -39,7 +34,7 @@ $cantidad = 10;
           <div class="">
             <div class="page-title">
               <div class="title_left" style="width: 100%">
-                <h3>Etapas del embudo de Ventas</h3>
+                <h3>Gestionar formas de pago</h3>
               </div>
             </div>
 
@@ -73,82 +68,25 @@ if(isset($id) && $id != 0) {
                   </div>
                   <div class="x_content">
                     <br />
-                    <form id="frm-embudo" data-parsley-validate class="form-horizontal form-label-left" name="frm_embudo" method="post">
+                    <form id="frm-fp" data-parsley-validate class="form-horizontal form-label-left" name="frm_embudo" method="post">
                       <div class="form-group">
                         <label class="control-label col-md-4 col-sm-4 col-xs-12" for="descripcion">
                             Descripci&oacute;n <span class="required">*</span>
                         </label>
                         <div class="col-md-8 col-sm-8 col-xs-12">
                           <input type="text" class="form-control"
-                                 placeholder="nombre de la etapa"
+                                 placeholder="Nombre de forma de pago"
                                  name="descripcion" id="descripcion"
 <?php
 if(isset($des) && $des != '') {
   print " value=\"$des\" ";
 }
+$checked_vehiculo = (isset($vehiculo) && $vehiculo == 1)?"checked":"";
 ?>
                                  required="required">
                         </div>
                       </div>
-                      <div class="form-group">
-                        <label class="control-label col-md-4 col-sm-4 col-xs-12" for="sel-orden">
-                            Orden <span class="required">*</span>
-                        </label>
-                        <div class="col-md-8 col-sm-8 col-xs-12">
-                          <select class="form-control" id="sel-orden" name="sel-orden" required="required"
-                                  data-toggle="tooltip" data-placement="bottom" title="Seleccione el orden segun el flujo de su empresa">
-                            <option value="">Seleccione</option>
-<?php
-$selected = "";
-for($x=1; $x<=$cantidad; $x++) {
-  $selected = (isset($orden) && $orden == $x)?"selected":"";
-  print "<option value=\"$x\" $selected>$x</option>";
-}
-//-- Valores siguientes (checks)
-$checked_adjunto = (isset($adjunto) && $adjunto == 't')?"checked":"";
-$checked_masivo  = (isset($masivo) && $masivo == 't')?"checked":"";
-$checked_poliza  = (isset($poliza) && $poliza == 't')?"checked":"";
-$checked_estado  = (isset($estado) && $estado == 'f')?"":"checked";
-?>
-                          </select>
-                        </div>
-                      </div>
-                      <div class="form-group">
-                        <label class="control-label col-md-4 col-sm-4 col-xs-12" for="chk-adjunto"
-                               data-toggle="tooltip" data-placement="top" title="La etapa requiere adjuntar documento">
-                            Requiere adjunto
-                        </label>
-                        <div class="col-md-8 col-sm-8 col-xs-12">
-                          <input type="checkbox" class="js-switch" name="chk-adjunto" id="chk-adjunto" <?php print $checked_adjunto ?> /> 
-                        </div>
-                      </div>                      
-                      <div class="form-group">
-                        <label class="control-label col-md-4 col-sm-4 col-xs-12" for="chk-masivo"
-                               data-toggle="tooltip" data-placement="top" title="Etapa por defecto para cargas masivas">
-                            Asignacion Masiva
-                        </label>
-                        <div class="col-md-8 col-sm-8 col-xs-12">
-                          <input type="checkbox" class="js-switch" name="chk-masivo" id="chk-masivo" <?php print $checked_masivo ?> /> 
-                        </div>
-                      </div>
-                      <div class="form-group">
-                        <label class="control-label col-md-4 col-sm-4 col-xs-12" for="chk-poliza"
-                               data-toggle="tooltip" data-placement="top" title="Etapa por defecto para cargas masivas">
-                            Requiere Poliza
-                        </label>
-                        <div class="col-md-8 col-sm-8 col-xs-12">
-                          <input type="checkbox" class="js-switch" name="chk-poliza" id="chk-poliza" <?php print $checked_poliza ?> /> 
-                        </div>
-                      </div>                      
-                      <div class="form-group">
-                        <label class="control-label col-md-4 col-sm-4 col-xs-12" for="chk-estado"
-                                data-toggle="tooltip" data-placement="bottom" title="Etapa Activa">
-                            Activa
-                        </label>
-                        <div class="col-md-8 col-sm-8 col-xs-12">
-                          <input type="checkbox" class="js-switch" name="chk-estado" id="chk-estado" <?php print $checked_estado ?> /> 
-                        </div>
-                      </div>                       
+                   
                       <div class="ln_solid"></div>
                         <div class="form-group">
                             <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
@@ -181,7 +119,7 @@ $checked_estado  = (isset($estado) && $estado == 'f')?"":"checked";
 <?php
 if(isset($id) && $id > 0) {
 ?>
-                        <input type="hidden" name="id-etapa" id="id-etapa" value="<?php print $id ?>" />
+                        <input type="hidden" name="id-fp" id="id-fp" value="<?php print $id ?>" />
 <?php
 }
 ?>
@@ -190,11 +128,11 @@ if(isset($id) && $id > 0) {
                 </div>
               </div>
               
-              <!-- Tabla de Etapas o niveles de embudo de Ventas -->
+              <!-- Tabla de formas de pago -->
               <div class="col-md-6 col-sm-6 col-xs-12">
                 <div class="x_panel">
                   <div class="x_title">
-                    <h2>Etapas</h2>
+                    <h2>Formas de pago registradas</h2>
                     <ul class="nav navbar-right panel_toolbox">
                       <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                       </li>
@@ -220,14 +158,13 @@ if(isset($str_bien) || isset($str_error)) {
                     <!-- tabla dinamica -->
                     <div id="historial" class="clearfix">
 <?php
-if($etapas == 0) {
+if($formas == 0) {
 ?>
                       <div class="table-responsive">
-                        <table class="table table-striped jambo_table bulk_action" id="tbl-etapas">
+                        <table class="table table-striped jambo_table bulk_action" id="tbl-productos">
                           <thead>
                             <tr class="headings">
-                              <th class="column-title" width="10%">Orden</th>
-                              <th class="column-title" width="70%">Etapa</th>
+                              <th class="column-title" width="70%">Producto</th>
                               <th class="column-title no-link last" colspan="2"><span class="nobr">Acci&oacute;n</span>
                               </th>
                             </tr>
@@ -241,7 +178,7 @@ if($etapas == 0) {
                       </div>
 <?php
 } else {
-  include("ajax/tabla_etapas.php");
+  include("ajax/tabla_formas_pago.php");
 }
 ?>
                     </div>
@@ -264,7 +201,8 @@ if($etapas == 0) {
             <h4 class="modal-title" id="myModalLblElimina">Confirme...</h4>
             </div>
             <div class="modal-body">
-            <h4>Desea eliminar la etapa: <span id="str-etapa" style="color: red;">[etapa]</span> de la lista (S/N)?</h4>
+            <h4>Desea eliminar el item: <span id="str-etapa" style="color: red;">[etapa]</span> de la lista (S/N)?</h4>
+            <small>(si la forma de pago se encuentra relacionada a cualquier registro no podr&aacute; ser borrada)</small>
             </div>
             <div class="modal-footer">
             <button type="button" class="btn btn-default" id="cancela-borrar">No</button>
@@ -286,7 +224,7 @@ pg_close($conn);
   //-- Validacion de Formulario y llamado a dialogo Modal
   function validafrm() {
     var ruta=document.frm_embudo;
-    var $myForm = $('#frm-embudo');
+    var $myForm = $('#frm-fp');
     if(ruta.checkValidity()) {
       $('#modConfirma').modal({backdrop: "static"});
     } else {
@@ -316,7 +254,7 @@ pg_close($conn);
   $('#borrar-etapa').click(function() {
     $("#modElimina").modal('hide');
 		$.ajax({type: 'POST',
-			url: "ajax/tabla_etapas.php",
+			url: "ajax/tabla_formas_pago.php",
 			async: false,
 			//-- Mostrar icono de espera mientras llega respuesta del script php
 			beforeSend:
@@ -337,21 +275,8 @@ pg_close($conn);
 </script>
 <script>
   $("#save-frm").click(function() {
-    var chkAdj = 'off', chkMas = 'off', chkAct = 'on', chkPoliza = 'off';
-    if ($('#chk-adjunto').is(":checked")) {
-      chkAdj = 'on';
-    }
-    if ($('#chk-masivo').is(":checked")) {
-      chkMas = 'on';
-    }
-    if ($('#chk-poliza').is(":checked")) {
-      chkPoliza = 'on';
-    }    
-    if(!$('#chk-estado').is(":checked")) {
-      chkAct = 'off';
-    }
 		$.ajax({type: 'POST',
-			url: "ajax/tabla_etapas.php",
+			url: "ajax/tabla_formas_pago.php",
 			async: false,
 			//-- Mostrar icono de espera mientras llega respuesta del script php
 			beforeSend:
@@ -360,30 +285,20 @@ pg_close($conn);
 					$.showLoading({name: 'jump-pulse',allowHide: false});			
 				},
 			data: {
-					'id_etapa'   : $('#id-etapa').val(),
-					'descripcion': $('#descripcion').val(),
-          'orden'      : $('#sel-orden').val(),
-          'adjunto'    : chkAdj,
-          'masivo'     : chkMas,
-          'estado'     : chkAct,
-          'poliza'     : chkPoliza
+					'id_fp'    : $('#id-fp').val(),
+					'descripcion': $('#descripcion').val()
 				  },
 			//-- Colocar respuesta del script php en el marco DIV indicado
 			success:
 				function(result){
           //-- Valores por defecto en el formulario
-          $("#sel-orden").val('');
-          if(chkAdj == 'on') $('#chk-adjunto').click();
-          if(chkMas == 'on') $('#chk-masivo').click();
-          if(chkPoliza == 'on') $('#chk-poliza').click();
-          if(chkAct == 'off') $('#chk-estado').click();
           $("#descripcion").val('').focus();
           //-- Borramos campo hidden antes de rellenar el nuevo html
-          $("#id-etapa").remove();
+          $("#id-fp").remove();
 					$("#historial").html(result);
 					$.hideLoading();
 					// bof inicializamos la tabla dinamica
-					$("#tbl-etapas").dataTable({
+					$("#tbl-productos").dataTable({
 					  "info"      	 : true,
 					  "searching" 	 : false,
 					  "ordering"     : false,

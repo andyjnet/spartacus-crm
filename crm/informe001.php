@@ -6,7 +6,9 @@ $ide = $_POST['ide'] ?? 0;
 $sWhere = "";
 if($ide) {
     $sWhere = " WHERE c.idejecutivo = $ide ";
-} 
+} else {
+    $sWhere = " WHERE 1=1 ";
+}
 ?>
 <!-- Contenido de la página -->
 <div class="right_col" role="main">
@@ -75,6 +77,10 @@ while($row = pg_fetch_assoc($query)) {
             </div>
         </div>
 <?php
+$sql_campaign = '';
+if($id_campaign) {
+  $sql_campaign = " AND (c.idcampaign = $id_campaign ) "; /* OR c.idetapa IN(50, 51, 44, 46, 47, 48)) "; */
+}
 //-- Valores Ratio del Ejecutivo Seleccionado
 $sql = "SELECT SUM((CASE WHEN c.idetapa=50 THEN 1 ELSE 0 END)) AS volver_llamar, 
             SUM((CASE WHEN c.idetapa=43 THEN 1 ELSE 0 END)) AS contacto,
@@ -90,6 +96,7 @@ $sql = "SELECT SUM((CASE WHEN c.idetapa=50 THEN 1 ELSE 0 END)) AS volver_llamar,
             INNER JOIN clientes_contactos cc ON(cc.idcliente = c.idcliente)
             INNER JOIN etapas_venta e ON(c.idetapa=e.id)
         $sWhere
+        $sql_campaign
         GROUP BY c.idejecutivo";       
 $query = pg_query($conn, $sql);
 $ratio1 = 0;
@@ -273,6 +280,7 @@ include('includes/dash-footer.php');
                       },
                       data:[
 <?php
+
 $sql = "SELECT e.descripcion,
             SUM(COUNT(*)) OVER() AS general,
             (COUNT(*)/SUM(COUNT(*))  OVER())::numeric(9,5) * 100 AS valor,
@@ -281,6 +289,7 @@ $sql = "SELECT e.descripcion,
             INNER JOIN clientes_contactos cc ON(c.idcliente = cc.idcliente)
             INNER JOIN etapas_venta e ON(c.idetapa=e.id)
         $sWhere
+        $sql_campaign
         GROUP BY e.descripcion
         ORDER BY 3 DESC";
 $query = pg_query($conn, $sql);
