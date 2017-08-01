@@ -163,7 +163,8 @@
 	/*
 	 * SQL queries
 	 * Get data to display
-	 */	
+	 */
+	$sql_campaign = "";
 	if($id_campaign)
 		$sql_campaign = " AND ( p.idcampaign = $id_campaign OR p.idetapa IN(50, 51, 44, 46, 47, 48) ) "; 
 	$sQuery = "

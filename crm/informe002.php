@@ -4,8 +4,11 @@ include('includes/dash-header.php');
 include('../includes/funciones.php');
 include('../includes/conn.php');
 $ide   = $_POST['ejecutivo'] ?? 0;
-$desde = $_POST['fecha1'] ?? '';
-$hasta = $_POST['fecha2'] ?? '';
+if(isset($_POST['fecha1'])) {
+    $desde = $_POST['fecha1'];
+    $hasta = $_POST['fecha2'];
+}
+
 $sWhere = "";
 $dis = "";
 if(!$usr_admin) {
@@ -54,7 +57,6 @@ while($row = pg_fetch_assoc($query)) {
     print "<option value=\"{$row['id']}\"$sel>{$row['descripcion']}</option>";
     $sel = "";
 }
-
 $mes_ini = new DateTime("first day of last month");
 $mes_fin = new DateTime("last day of last month");
 

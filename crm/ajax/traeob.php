@@ -262,6 +262,7 @@ switch($objeto) {
 <?php            
 //-- buscamos documento adjuntos a la cotizacion
 $sql = "SELECT a.id AS idfile, a.ruta, a.anterior,
+            e.id AS idetapa,
 			e.descripcion AS etapa,
 			a.size_text AS size,
 			to_char(a.fecha_reg, 'DD/MM/YYYY HH24:MI:SS') AS fecha_reg,
@@ -273,6 +274,7 @@ $sql = "SELECT a.id AS idfile, a.ruta, a.anterior,
 			AND idmodulo = $id
 		ORDER BY e.orden";
 $query = pg_query($conn, $sql);
+$no_attach = "";
 if(pg_num_rows($query) > 0) {
     $html = '$("#tabla-adjuntos").html(\'
     <div class="table-responsive">
@@ -289,34 +291,35 @@ if(pg_num_rows($query) > 0) {
           </tr>
         </thead>
         <tbody>';
-$act = 1;
-while($fila = pg_fetch_assoc($query)) {
-	$clase = (($act%2)==0)?"odd pointer":"even pointer";
-    $html .='
-      <tr class="<?php print $clase ?>">
-        <td class=" text-left">'.$fila['anterior'].'</td>
-        <td class=" text-left"><strong>'.$fila['etapa'].'</strong></td>
-		<td class=" text-left">'.$fila['size'].'</td>
-		<td class=" text-left">'.$fila['fecha_reg'].'</td>
-        <td class=" text-left">'.$fila['usuario'].'</td>
-		<td class=" last text-center">
-            <a href="javascript:void(0)"
-			   data-toggle="tooltip" data-placement="bottom"
-			   title="Descargar '.$fila['anterior'].'"
-			   onclick="downloadFile('.$fila['idfile'].');">
-				<i class="fa fa-download"></i>
-			</a>        
-			&nbsp;&nbsp;
-            <a href="javascript:void(0)"
-			   data-toggle="tooltip" data-placement="bottom"
-			   title="Click para eliminar Documento: '.$fila['anterior'].'"
-			   onclick="deleteFile('.$fila['idfile'].');">
-				<i class="fa fa-remove" style="color: red;"></i>
-			</a>			
-        </td>
-      </tr>';
-    $act += 1;
-}
+    $act = 1;
+    while($fila = pg_fetch_assoc($query)) {
+        $clase = (($act%2)==0)?"odd pointer":"even pointer";
+        $no_attach .= '$("#etapa").children("[value='.$fila['idetapa'].']").attr("is-attach", "no");'; 
+        $html .='
+          <tr class="<?php print $clase ?>">
+            <td class=" text-left">'.$fila['anterior'].'</td>
+            <td class=" text-left"><strong>'.$fila['etapa'].'</strong></td>
+            <td class=" text-left">'.$fila['size'].'</td>
+            <td class=" text-left">'.$fila['fecha_reg'].'</td>
+            <td class=" text-left">'.$fila['usuario'].'</td>
+            <td class=" last text-center">
+                <a href="javascript:void(0)"
+                   data-toggle="tooltip" data-placement="bottom"
+                   title="Descargar '.$fila['anterior'].'"
+                   onclick="downloadFile('.$fila['idfile'].');">
+                    <i class="fa fa-download"></i>
+                </a>        
+                &nbsp;&nbsp;
+                <a href="javascript:void(0)"
+                   data-toggle="tooltip" data-placement="bottom"
+                   title="Click para eliminar Documento: '.$fila['anterior'].'"
+                   onclick="deleteFile('.$fila['idfile'].');">
+                    <i class="fa fa-remove" style="color: red;"></i>
+                </a>			
+            </td>
+          </tr>';
+        $act += 1;
+    }
     $html .= '
         </tbody>
       </table>
@@ -326,7 +329,7 @@ while($fila = pg_fetch_assoc($query)) {
 } else {
     $html = '$("#tabla-adjuntos").html("");';
 }
-echo $html;
+echo $html.$no_attach;
 ?>              
 
         </script>

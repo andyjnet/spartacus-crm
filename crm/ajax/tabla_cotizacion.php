@@ -112,6 +112,14 @@ $forma_pago		 = isset($_POST['forma-pago'])?$_POST['forma-pago']:0;
 $deducible		 = isset($_POST['deducible'])?$_POST['deducible']:'';
 $idcompania		 = isset($_POST['cia'])?$_POST['cia']:0;
 
+$comision_usuario = 0;
+if($ejecutivo) {
+   $sql = "SELECT comision FROM usuarios WHERE id=$ejecutivo";
+   $query = pg_query($conn, $sql);
+   $row = pg_fetch_assoc($query);
+   $comision_usuario = $row['comision'];
+}
+
 $id_eliminar 	 = isset($_POST['id-eliminar'])?$_POST['id-eliminar']:0;
 $nuevo		 = true;
 //-- concatenados
@@ -199,6 +207,7 @@ if($rut && !$idcotizacion) {
 				,cuota = $cuota
 				,monto_asegurado = $monto_asegurado
 				,comision_corredor = $comision
+				,comision = $comision_usuario
 				,observacion = '$comentarios'::text
 				,poliza = '$poliza'
 				,idetapa = $etapa
@@ -267,7 +276,7 @@ if($sw) {
 		}
 		//-- eof Manipulacion de adjuntos
 		//-- Log de acciones
-		glog($idusuario, $usr_nombre, 'cotizacion',"Registro $texto ID [$idcotizacion] etapa [$etapa] Prima [$prima] Prima Neta [$prima_neta] Comision [$comision]");		
+		glog($idusuario, $usr_nombre, 'cotizacion',"Registro $texto ID [$idcotizacion] etapa [$etapa] Prima [$prima] Prima Neta [$prima_neta] Comision Corredor [$comision]");		
 		if(!isset($str_error))
 			$str_bien = "La cotizaci&oacute;n se ha $texto correctamente!";
 	} else {

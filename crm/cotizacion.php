@@ -285,7 +285,9 @@ while($row = pg_fetch_assoc($query)) {
   print "<option value=\"{$row['id']}\"$sel>{$row['descripcion']}</option>";
 }
 /* Ejecutivos */
-$sql = "SELECT id, CONCAT(nombre, ' ', apellidos) AS descripcion
+$sql = "SELECT id,
+         CONCAT(nombre, ' ', apellidos) AS descripcion,
+         comision
         FROM usuarios
         WHERE estado=1
           AND idcargo > 0
@@ -299,7 +301,7 @@ $query = pg_query($conn, $sql);
                         </label>
                         <div class="col-md-4 col-sm-4 col-xs-12">
                           <select id="ejecutivo" name="ejecutivo" class="form-control" required>
-                            <option value="">Seleccione...</option>
+                            <option value="" comision="0">Seleccione...</option>
 <?php
 $sel = (pg_numrows($query) == 1)?" selected":"";
 while($row = pg_fetch_assoc($query)) {
@@ -307,7 +309,7 @@ while($row = pg_fetch_assoc($query)) {
     if($cid && $row['id'] == $idusuario)
       $sel = " selected";
   }  
-  print "<option value=\"{$row['id']}\"$sel>{$row['descripcion']}</option>";
+  print "<option value=\"{$row['id']}\" comision=\"{$row['comision']}\"$sel>{$row['descripcion']}</option>";
   $sel = "";
 }
 ?>
@@ -761,9 +763,10 @@ include('includes/dash-footer.php');
   $(document).ready(function() {
     $("#prima, #comision, #prima-neta").on("change", function() {
       var calCom = parseFloat($("#prima-neta").val()) * parseFloat($("#comision").val()) / 100;
-      var comUsr = parseFloat($("#comision-usuario").val());
+      //var comUsr = parseFloat($("#comision-usuario").val());
+      var comUsr = parseFloat($("#ejecutivo").children(":selected").attr("comision"));
       calCom = calCom * <?php print $valor_uf ?> * 0.85;
-      calCom = isNaN(calCom) ? 0 : calCom; //.toFixed(2);
+      calCom = isNaN(calCom) ? 0 : calCom; 
       $("#comision-corredor").val(calCom.toLocaleString("es-CL", { style: 'currency', currency: 'CLP', maximumFractionDigits: 2 })).css("color","green");
       comUsr = isNaN(comUsr) ? 0 : comUsr;
       comUsr = calCom * comUsr / 100;
@@ -1023,8 +1026,9 @@ if($cid) {
     if (typeof paramGuardarNuevo === 'undefined') paramGuardarNuevo = 0;
     SalvarNuevo = paramGuardarNuevo;
     if(api.getFiles().length === 0) {
-      if($("#poliza").val().length >= 5)
+      /* if($("#poliza").val().length >= 5)
         eFile = true;
+      */
       if($("#etapa").children(":selected").attr("is-attach") == 'si')
         eFile = true;      
     }
