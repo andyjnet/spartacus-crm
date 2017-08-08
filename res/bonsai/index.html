@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />    
+    <link rel='stylesheet' href='css/jquery.bonsai.css'> 
+  </head>
+  <body>
+      <!-- TreeView colapsable -->
+      <ol id='checkboxes'>
+        <li class='expanded'><input id="chkmenu00" type='checkbox' value='root' /> Todo
+          <ol>
+            <li>
+              <input id="chkmenu01" type='checkbox' value='1' /> Uno
+            </li>
+            <li>
+              <input id="chkmenu02" type='checkbox' value='2' /> Dos
+              <ol>
+                <li>
+                  <input id="chkmenu03" type='checkbox' value='3' /> Tres
+                  <ol>
+                    <li>
+                      <input id="chkmenu04" type='checkbox' value='4' checked /> Cuatro
+                    </li>
+                    <li>
+                      <input id="chkmenu05" type='checkbox' value='5' /> Cinco
+                    </li>
+                  </ol>
+                </li>
+              </ol>
+            </li>
+            <li><input id="chkmenu06" type='checkbox' value='6' /> Opcion Seis</li>
+          </ol>
+        </li>
+      </ol>
+      <!--/ TreeView colapsable -->
+      <input type="button" id="update" value="Actualizar">
+      <input type="button" id="limpiar" value="Limpiar">
+      <p></p>
+    <!-- jQuery -->
+    <script
+        src="https://code.jquery.com/jquery-3.2.1.min.js"
+        integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+        crossorigin="anonymous">        
+    </script>
+    <!-- Libreria bonsai para treeview con checkboxes -->
+    <script src='js/jquery.bonsai.js'></script>
+    <script src='js/jquery.qubit.js'></script>     
+    <script>
+      $(document).ready(function() {
+        $('#checkboxes').bonsai({
+          expandAll: true,
+          checkboxes: true, 
+          handleDuplicateCheckboxes: true ,
+          addSelectAll: true
+        });
+      function getCheckboxes() {
+        // return all checkboxes that are not in hidden list items
+        return scope.find('li')
+          .filter(self.options.selectAllExclude || function() {
+            return $(this).css('display') != 'none';
+          })
+          .find('> input[type=checkbox]');
+      }        
+      });
+    </script>
+    <!--/ Libreria bonsai para treeview con checkboxes -->
+    <script>
+      $('#update').on("click", function() {
+        var items = $('[id*="chkmenu"]:checked').map(function() { return $(this).val().toString(); } ).get().join(",");
+        $("p").html(items);
+      });
+      $('#limpiar').on("click", function() {
+  getCheckboxes().prop({
+    checked: false,
+    indeterminate: false
+  });
+      });      
+    </script>
+  </body>
+</html>

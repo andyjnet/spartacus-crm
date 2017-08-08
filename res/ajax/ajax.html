@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script>
+$(document).ready(function(){
+    $("button").click(function(){
+        $.ajax({type: 'POST',
+                url: "demo_ajax.php",
+                async: false,
+                data: { 
+                        'id': '123', 
+                        'nombre': 'Adrian' 
+                      },
+                success: function(result){
+                            $("#contenido").html(result);
+                         }
+               });
+    });
+
+    $("#sel").change(function(){
+    $.ajax({type: 'POST',
+            url: "demo_ajax.php",
+            async: false,
+            //-- Mostrar icono de espera mientras llega respuesta del script php
+            beforeSend: function() {
+                          $("#contenido").html("<ul class=\"fa-ul\"><li><i class=\"fa-li fa fa-spinner fa-spin\"></i><br /></li></ul>");
+                        },
+            data: { 
+                    'id': this.value, 
+                    'nombre': 'Select' 
+                  },
+            //-- Colocar respuesta del script php en el marco DIV indicado
+            success: function(result){
+                        $("#contenido").html(result);
+                     }
+           });
+    });
+    
+});
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+
+<div id="contenido"><h2>Vamos a cambiar este texto con AJAX!</h2></div>
+
+<button>Click para cambiar</button>
+<br />
+Seleccione:
+<select id="sel">
+    <option value="1">Valor 1</option>
+    <option value="2">Valor 2</option>
+    <option value="3">Contenido 3</option>
+</select>
+
+</body>
+</html>
