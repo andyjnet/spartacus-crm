@@ -19,6 +19,8 @@ $inicio		 = isset($_POST['inicio'])?$_POST['inicio']:'01/01/2017';
 $fin		 = isset($_POST['fin'])?$_POST['fin']:'01/01/2017';
 $retorno	 = isset($_POST['retorno'])?$_POST['retorno']:0;
 $comision	 = isset($_POST['comision'])?$_POST['comision']:0.00;
+$comision_proveedor	= isset($_POST['comision-proveedor'])?$_POST['comision-proveedor']:0.00;
+$comision_ejecutivo	= isset($_POST['comision-ejecutivo'])?$_POST['comision-ejecutivo']:0.00;
 $id_eliminar = isset($_POST['id-eliminar'])?$_POST['id-eliminar']:0;
 $nuevo		 = true;
 
@@ -50,8 +52,9 @@ if($id_eliminar) {
 
 //-- Verificamos si viene $id_ramo para crear nuevo registro o editar
 if(!$id_campaign && $descripcion) {
-	$sql = "INSERT INTO campaign(descripcion, margen, comision, inicio, fin, id_retorno)
-		    SELECT '$descripcion', $margen, $comision, $inicio, $fin, $retorno
+	$sql = "INSERT INTO campaign(descripcion, margen, comision, inicio, fin, id_retorno, comision_proveedor, comision_ejecutivo)
+		    SELECT '$descripcion', $margen, $comision, $inicio, $fin, $retorno,
+				$comision_proveedor, $comision_ejecutivo
 			WHERE NOT EXISTS(SELECT id FROM campaign
 					         WHERE UPPER(descripcion)=UPPER('$descripcion')
 								AND inicio::date = $inicio
@@ -82,7 +85,8 @@ $sql = "SELECT id, descripcion, estado,
 			margen, comision,
 			TO_CHAR(inicio,'DD/MM/YYYY') AS inicio,
 			TO_CHAR(fin,'DD/MM/YYYY') AS fin,
-			id_retorno
+			id_retorno,
+			comision_proveedor, comision_ejecutivo
 		FROM campaign
 		WHERE id > 0
 		ORDER BY descripcion";
@@ -121,7 +125,8 @@ while($fila = pg_fetch_assoc($query)) {
 	$clase = (($act%2)==0)?"odd pointer":"even pointer";
 	$token = md5($fila['id'].$fila['descripcion'].$fila['margen'].$fila['comision'].$fila['inicio'].$fila['fin'].$fila['id_retorno'].'ajbc');
 	$url   = "id={$fila['id']}&token=$token&descripcion={$fila['descripcion']}&margen={$fila['margen']}&comision={$fila['comision']}&";
-	$url  .= "inicio={$fila['inicio']}&fin={$fila['fin']}&retorno={$fila['id_retorno']}";
+	$url  .= "inicio={$fila['inicio']}&fin={$fila['fin']}&retorno={$fila['id_retorno']}&";
+	$url  .= "comision-proveedor={$fila['comision_proveedor']}&comision-ejecutivo={$fila['comision_ejecutivo']}";
 	$sel   = '';
 	if($fila['estado'] == 1)
 		$sel = " selected";

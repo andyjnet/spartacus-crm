@@ -86,6 +86,7 @@ $region			 = isset($_POST['region'])?$_POST['region']:'';
 $provincia		 = isset($_POST['provincia'])?$_POST['provincia']:'';
 $comuna			 = isset($_POST['comuna'])?$_POST['comuna']:'';
 $etapa	  	  	 = isset($_POST['etapa'])?$_POST['etapa']:0;
+$etapa_actual	 = isset($_POST['etapa-actual'])?$_POST['etapa-actual']:0;
 $sucursal	  	 = isset($_POST['sucursal'])?$_POST['sucursal']:0;
 $corredor 	  	 = isset($_POST['corredor'])?$_POST['corredor']:0;
 $producto		 = isset($_POST['producto'])?$_POST['producto']:0;
@@ -221,7 +222,21 @@ if($rut && !$idcotizacion) {
 			RETURNING id";
 	$texto  = "actualizado";
 	$texto2 = "actualizar";
-	
+	//--- notificacion a ejecutivo
+	if($idusuario <> $ejecutivo) {
+		$sql2 = "SELECT CONCAT(nombre, ' ', apellidos) AS usuario, email FROM usuarios WHERE id=$ejecutivo AND email<>''";
+		$query = pg_query($sql2);
+		if($row = pg_fetch_assoc($query)) {
+			$correo = $row['email'];
+			$usr 	= $row['usuario'];
+			$sql2 	= "SELECT CONCAT(nombre, ' ', apellidos) AS usr_activo FROM usuarios WHERE id=$idusuario";
+			$query 	= pg_query($sql2);
+			if($row = pg_fetch_assoc($query)) {
+				$usr_activo = $row['usr_activo'];
+				notificar($correo, $usr, $idcotizacion, "Cotización ID: [$idcotizacion] ha sido MODIFICADA por <strong>$usr_activo</strong>, se recomienda verificar cambios");
+			}
+		}
+	}
 } else {
 	$sw = 0;
 }
@@ -273,8 +288,39 @@ if($sw) {
 					RETURNING id";
 			if(!$tran = pg_query($conn, $sql))
 				$str_error = "Ha ocurrido un problema agregando el archivo adjunto";
-		}
+		}		
 		//-- eof Manipulacion de adjuntos
+
+		//-- bof Notificacion por correo
+		if($idusuario <> $ejecutivo && $etapa <> $etapa_actual) {
+			$sql2 	= "SELECT CONCAT(nombre, ' ', apellidos) AS usr_activo FROM usuarios WHERE id=$idusuario";
+			$query 	= pg_query($sql2);
+			$row = pg_fetch_assoc($query);
+			$usr_activo = $row['usr_activo'];
+			$sql2 = "SELECT u.id, CONCAT(nombre, ' ', apellidos) AS nombre,
+						p.permisos, u.email
+					 FROM usuarios u
+						INNER JOIN permisos p ON(u.idcargo = p.idcargo)
+					 WHERE u.id <> $idusuario
+						AND u.email <> ''";
+			$query = pg_query($sql2);
+			while($row = pg_fetch_assoc($query)) {
+				$permiso = $row['permisos'];
+				$permiso = base64_decode($permiso);
+				$access = explode(",", $permiso);
+				foreach ($access as $item) {
+				  $tmp = intval($item);
+				  if($tmp > 1000) {
+					$etapa_permiso = $tmp - 1000;
+					if($etapa == $etapa_permiso) {
+						notificar($row['email'], $row['nombre'], $idcotizacion, "Cotización ID: [$idcotizacion] ha sido cambiada de estado por <strong>$usr_activo</strong>, se recomienda ingresar al sistema y revisar a la brevedad posible.");
+					}
+				  }
+				}
+			}
+		}
+		//-- eof Notificacion por correo
+
 		//-- Log de acciones
 		glog($idusuario, $usr_nombre, 'cotizacion',"Registro $texto ID [$idcotizacion] etapa [$etapa] Prima [$prima] Prima Neta [$prima_neta] Comision Corredor [$comision]");		
 		if(!isset($str_error))

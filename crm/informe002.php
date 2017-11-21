@@ -42,7 +42,7 @@ if($ide) {
                   Seleccione Ejecutivo
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                  <select id="ejecutivo" name="ejecutivo" class="form-control" required name="ide"<?php print $dis ?>>
+                  <select id="ejecutivo" name="ejecutivo" class="form-control" name="ide"<?php print $dis ?>>
                     <option value="">Seleccione...</option>
 <?php
 $sql = "SELECT id, CONCAT(nombre, ' ', apellidos) AS descripcion
@@ -174,6 +174,9 @@ if(pg_num_rows($query) == 0) {
 $tbruta = 0;
 $tiva   = 0;
 $tneta  = 0;
+$tmonto = 0;
+$tcsa   = 0;
+$acom   = 0;
 $total  = 0;
 while($fila = pg_fetch_assoc($query)) {
 ?>
@@ -195,6 +198,9 @@ while($fila = pg_fetch_assoc($query)) {
     $tbruta += $fila['pbruta'];
     $tiva   += $fila['iva'];
     $tneta  += $fila['prima_neta'];
+    $tmonto += $fila['monto_comision'];
+    $tcsa   += $fila['csa'];
+    $acom   += $fila['a_comision'];
     $total  += $fila['remuneracion'];
 }
 if($tbruta || $tneta || $total) {
@@ -208,8 +214,9 @@ if($tbruta || $tneta || $total) {
       <td class=" text-right"><strong><?php print number_format($tiva,2,",",".") ?></strong></td>
       <td class=" text-right"><strong><?php print number_format($tneta,2,",",".") ?></strong></td>
       <td class=" text-right">&nbsp;</td>
-      <td class=" text-right">&nbsp;</td>
-      <td class=" text-right" colspan="2"><strong>Valor Bruto ($):</strong></td>
+      <td class=" text-right"><strong><?php print number_format($tmonto,3,",",".") ?></strong></td>
+      <td class=" text-right"><strong><?php print number_format($tcsa,3,",",".") ?></strong></td>
+      <td class=" text-right"><strong><?php print number_format($acom,3,",",".") ?></strong></td>
       <td class=" last text-right" style="color: green" colspan="2"><strong><?php print number_format($total,2,",",".") ?></strong></td>
     </tr>
 <?php

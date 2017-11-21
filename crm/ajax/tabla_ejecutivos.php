@@ -72,6 +72,7 @@ if($rut && $nombre && !$idejecutivo) {
 				,apellidos = '$apellidos'
 				,telefono  = '$telefono'
 				,movil	   = '$movil'
+				,email	   = '$email'
 				,direccion = '$direccion'
 				,ingreso   = $ingreso
 				,idnivel   = $nivel

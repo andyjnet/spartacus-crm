@@ -4,26 +4,6 @@ $css_table = 1;
 include('includes/dash-header.php');
 include('../includes/funciones.php');
 include('../includes/conn.php');
-//-- Verificamos si se ha cambiado las campañas activas
-$update = $_POST['btn-update'] ?? 0;
-if($update) {
-  $sql = "UPDATE campaign SET estado=0";
-  $query = pg_query($sql);
-  $sql = "SELECT MAX(id) FROM campaign";
-  $query = pg_query($sql);
-  $fila = pg_fetch_array($query);
-  $max = $fila[0];
-  for($x=0; $x<=$max; $x++) {
-    $chk = "campaign-$x";
-    $activar = $_POST[$chk] ?? 0;
-    if($activar) {
-      //Activar campaña seleccionada
-      $sql = "UPDATE campaign SET estado=1 WHERE id=$x";
-      $query = pg_query($sql);
-    }
-  }
-}
-
 //-- Verificar si hay accion por ejecutar
 $acc = isset($_GET['acc'])?$_GET['acc']:'';
 if($acc) {
@@ -32,8 +12,6 @@ if($acc) {
   $des       = isset($_GET['descripcion'])?$_GET['descripcion']:'';
   $margen    = $_GET['margen'] ?? 0.00;
   $comision  = $_GET['comision'] ?? 0.00;
-  $comision_proveedor = $_GET['comision-proveedor'] ?? 0.00;
-  $comision_ejecutivo = $_GET['comision-ejecutivo'] ?? 0.00;
   $inicio    = $_GET['inicio'] ?? '';
   $fin       = $_GET['fin'] ?? '';
   $retorno   = $_GET['retorno'] ?? 0;
@@ -72,7 +50,7 @@ $cantidad = 10;
               <div class="col-md-12 col-sm-12 col-xs-12">
                 <div class="x_panel">
                   <div class="x_title">
-                    <h2>Seleccione la(s) Campa&ntilde;a(s) que estara(n) Activa(s)</h2>
+                    <h2>Campa&ntilde;a activa</h2>
                     <ul class="nav navbar-right panel_toolbox">
                       <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                       </li>
@@ -84,38 +62,24 @@ $cantidad = 10;
                   <div class="x_content">
                     <form id="frm-activa" data-parsley-validate class="form-horizontal form-label-left" name="frm_activa" method="post">
                       <div class="form-group">
-                        <div class="col-md-9 col-sm-9 col-xs-12">                         
+                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="activa">
+                          Activar campa&ntilde;a seleccionada:
+                        </label>
+                        <div class="col-md-9 col-sm-9 col-xs-12">
+                          <select id="activa" name="activa" class="form-control">
+                            <option value="">Seleccione...</option>
 <?php
 $sql = "SELECT id, descripcion, estado FROM campaign WHERE id>0 ORDER BY descripcion";
 $query = pg_query($conn, $sql);
 while($row = pg_fetch_assoc($query)) {
-  if($row['estado'] == 1) $checked = 'checked="checked"';
-?>
-    <div class="checkbox">
-      <label>
-        <input id="campaign-<?php print $row['id'] ?>"
-               type="checkbox"
-               name = "campaign-<?php print $row['id'] ?>"
-               class="flat" <?php print $checked ?>
-        ><?php print $row['descripcion'] ?>
-      </label>
-    </div> 
-<?php
-  $checked = "";
+  if($row['estado'] == 1) $sel = " selected";
+  print "<option value=\"{$row['id']}\"$sel>{$row['descripcion']}</option>";
+  $sel = "";
 }
 ?>
+                          </select>                          
                         </div>                          
                       </div>
-                      <div class="ln_solid"></div>
-                      <div class="form-group">
-                          <div class="col-md-7 col-sm-7 col-xs-12 col-md-offset-6">
-                              <button id="btn-update" name="btn-update" type="submit" class="btn btn-success"
-                                      data-toggle="tooltip"
-                                      data-placement="left"
-                                      title="Actualizar campaña(s) Activa(s)"
-                                      value="Actualizar">Actualizar</button>
-                          </div>
-                      </div>                      
                     </form>
                   </div>
                 </div>
@@ -185,8 +149,8 @@ if(isset($margen) && $margen) print "value=\"$margen\"";
                         </div>
                       </div>
                       <div class="form-group">
-                        <label class="control-label col-md-4 col-sm-4 col-xs-12" for="comision">
-                            Com. Spartacus<span class="required">*</span>
+                        <label class="control-label col-md-4 col-sm-4 col-xs-12" for="margen">
+                            Comisi&oacute;n <span class="required">*</span>
                         </label>
                         <div class="col-md-8 col-sm-8 col-xs-12 has-feedback">
                           <input type="text" class="form-control"
@@ -201,45 +165,7 @@ if(isset($comision) && $comision) print "value=\"$comision\"";
                                  maxlength="5">
                           <span class="fa fa-percent form-control-feedback right" aria-hidden="true"></span>
                         </div>
-                      </div>
-                      
-                      <div class="form-group">
-                        <label class="control-label col-md-4 col-sm-4 col-xs-12" for="comision-proveedor">
-                            Com. Proveedor<span class="required">*</span>
-                        </label>
-                        <div class="col-md-8 col-sm-8 col-xs-12 has-feedback">
-                          <input type="text" class="form-control"
-                                 placeholder="% a pagar al proveedor"
-                                 name="comision-proveedor"
-                                 id="comision-proveedor"
-<?php
-if(isset($comision_proveedor) && $comision_proveedor) print "value=\"$comision_proveedor\"";
-?>                                 
-                                 required="requiered"
-                                 onkeypress="validate3(event);"
-                                 maxlength="5">
-                          <span class="fa fa-percent form-control-feedback right" aria-hidden="true"></span>
-                        </div>
-                      </div>
-                      <div class="form-group">
-                        <label class="control-label col-md-4 col-sm-4 col-xs-12" for="comision-ejecutivo">
-                            Com. Ejecutivo<span class="required">*</span>
-                        </label>
-                        <div class="col-md-8 col-sm-8 col-xs-12 has-feedback">
-                          <input type="text" class="form-control"
-                                 placeholder="Comision del ejecutivo"
-                                 name="comision-ejecutivo"
-                                 id="comision-ejecutivo"
-<?php
-if(isset($comision_ejecutivo) && $comision_ejecutivo) print "value=\"$comision_ejecutivo\"";
-?>                                 
-                                 required="requiered"
-                                 onkeypress="validate4(event);"
-                                 maxlength="5">
-                          <span class="fa fa-percent form-control-feedback right" aria-hidden="true"></span>
-                        </div>
-                      </div>                         
-                      
+                      </div>                        
                       <div class="form-group">
                         <label class="control-label col-md-4 col-sm-4 col-xs-12" for="inicio">
                           Inicio
@@ -282,7 +208,7 @@ if(isset($fin) && $fin) print "value=\"$fin\"";
                           </div>                          
                       </div>
                     <div class="form-group">
-                        <label class="control-label col-md-4 col-sm-4 col-xs-12" for="retorno">
+                        <label class="control-label col-md-4 col-sm-4 col-xs-12" for="margen">
                             Campaña/retorno
                         </label>
                         <div class="col-md-8 col-sm-8 col-xs-12 has-feedback">
@@ -477,34 +403,6 @@ pg_close($conn);
        return true;
      }
   }   
-  function validate3(evt) {
-     var key = window.event ? evt.keyCode : evt.which;
-     var valor = document.getElementById("comision-proveedor").value;
-     if (key === 8 || key === 46) {
-      if(key === 46 && valor.indexOf('.') >= 0 ) {
-        return false;
-      }
-      return true;
-     } else if ( key < 48 || key > 57 ) {
-       return false;
-     } else {
-       return true;
-     }
-  }
-  function validate4(evt) {
-     var key = window.event ? evt.keyCode : evt.which;
-     var valor = document.getElementById("comision-ejecutivo").value;
-     if (key === 8 || key === 46) {
-      if(key === 46 && valor.indexOf('.') >= 0 ) {
-        return false;
-      }
-      return true;
-     } else if ( key < 48 || key > 57 ) {
-       return false;
-     } else {
-       return true;
-     }
-  }  
   function fn_elimina(id_etapa, des_etapa) {
     //-- Escribimos el texto en el modal
     $("#str-etapa").html(des_etapa);
@@ -548,8 +446,6 @@ pg_close($conn);
   $(document).ready(function() {
     $("[id='margen']").keypress(validate);
     $("[id='comision']").keypress(validate2);
-    $("[id='comision-proveedor']").keypress(validate3);
-    $("[id='comision-ejecutivo']").keypress(validate4);
     $('#inicio, #fin').daterangepicker({
       "locale": {
               "format": "DD/MM/YYYY",
@@ -608,9 +504,7 @@ pg_close($conn);
           'inicio'      : $('#inicio').val(),
           'fin'         : $('#fin').val(),
           'retorno'     : $('#retorno').val(),
-          'comision'    : $('#comision').val(),
-          'comision-proveedor' : $('#comision-proveedor').val(),
-          'comision-ejecutivo' : $('#comision-ejecutivo').val()
+          'comision'    : $('#comision').val()
 				  },
 			//-- Colocar respuesta del script php en el marco DIV indicado
 			success:

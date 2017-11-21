@@ -244,6 +244,14 @@ switch($objeto) {
             $("#poliza").val("<?php print $fila['poliza'] ?>");
             $("#prima").trigger("change");
             
+            $("#etapa-actual").remove();
+            $('<input>', {
+                type : 'hidden',
+                id   : 'etapa-actual',
+                name : 'etapa-actual',
+                value: '<?php print $fila['idetapa']; ?>'
+              }).appendTo('#frm-cliente');
+            
             $("#idcotizacion").remove();
             $('<input>', {
                 type : 'hidden',
