@@ -26,7 +26,8 @@ $uname 	 	 = isset($_POST['uname'])?$_POST['uname']:'';
 $clave 	 	 = isset($_POST['clave'])?$_POST['clave']:'';
 $id_eliminar = isset($_POST['id-eliminar'])?$_POST['id-eliminar']:0;
 $pwd		 = isset($_POST['pwd'])?$_POST['pwd']:'';
- $supervisor =  isset($_POST['supervisor'])?$_POST['supervisor']:0;
+$supervisor  = isset($_POST['supervisor'])?$_POST['supervisor']:0;
+$campaign	 = isset($_POST['campaign'])?$_POST['campaign']:0;
 $nuevo		 = true;
 //-- Si viene id a eliminar
 if($id_eliminar) {
@@ -54,9 +55,11 @@ $sw = 1;
 if($rut && $nombre && !$idejecutivo) {
 	//-- Scripts para crear cliente nuevo
 	$sql = "INSERT INTO usuarios(rut, nombre, uname, clave, apellidos, telefono, movil, email, direccion,
-								 ingreso, idnivel, idcargo, idsucursal, idusuario, estado, idsupervisor, comision)
+								 ingreso, idnivel, idcargo, idsucursal, idusuario, estado, idsupervisor, comision,
+								 idcampaign)
 			SELECT '$rut', '$nombre', '$uname', md5('$clave'), '$apellidos', '$telefono', '$movil',
-				'$email', '$direccion', $ingreso, $nivel, $cargo, $sucursal, $idusuario, $esUsuario, $supervisor, $comision
+				'$email', '$direccion', $ingreso, $nivel, $cargo, $sucursal, $idusuario, $esUsuario, $supervisor, $comision,
+				$campaign
 			WHERE NOT EXISTS(SELECT id FROM usuarios WHERE rut='$rut')
 			RETURNING id";
 	$texto  = "creado";
@@ -81,7 +84,8 @@ if($rut && $nombre && !$idejecutivo) {
 				,idusuario = $idusuario
 				,estado	   = $esUsuario
 				,idsupervisor = $supervisor
-				,comision  = $comision
+				,comision     = $comision
+				,idcampaign   = $campaign
 			WHERE id = $idejecutivo
 			RETURNING id";
 	$texto  = "actualizado";

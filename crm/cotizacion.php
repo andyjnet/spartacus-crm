@@ -13,13 +13,15 @@ if(!$cid = base64_decode($cid, true)) $cid = '';
  /* Datos del usuario */
  $comision_usuario = 0;
  if($idusuario) {
-    $sql = "SELECT comision FROM usuarios WHERE id=$idusuario";
+    $sql = "SELECT comision, idcampaign FROM usuarios WHERE id=$idusuario";
     $query = pg_query($conn, $sql);
     $row = pg_fetch_assoc($query);
     $comision_usuario = $row['comision'];
+    $idcampaign_usr   = $row['idcampaign'] ?? 0;
  }
  
 /* Buscar los datos del cliente */
+$sql_lcamp = "";
 if($cid) {
   $sql = "SELECT c.rut, c.nombre, c.nombre_fantasia,
             cc.nombre AS contacto,
@@ -36,6 +38,9 @@ if($cid) {
     $telefono = $cliente['telefono'];
     $movil    = $cliente['movil'];
     $email    = $cliente['email'];
+  }
+  if(!$usr_admin && $idcampaign_usr) {
+    $sql_lcamp = " AND id IN($idcampaign_usr) ";
   }
 }
 ?>
@@ -519,6 +524,7 @@ $sql     = "SELECT id, descripcion
             WHERE id>0
                AND estado = 1
                AND ( fin ISNULL OR (NOW() BETWEEN inicio AND fin ) )
+               $sql_lcamp
             ORDER BY descripcion";
 $qCamp   = pg_query($sql);
 $hayCamp = (pg_numrows($qCamp)>0) ? 1 : 0;

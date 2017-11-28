@@ -166,7 +166,7 @@ while($row = pg_fetch_assoc($query)) {
                           <select id="sucursal" class="form-control" required>
                             <option value="0">Seleccione...</option>
 <?php
-//-- Cargos
+//-- Sucursales
 $sql = "SELECT id, descripcion FROM sucursales WHERE id>0 ORDER BY descripcion";
 $query = pg_query($conn, $sql);
 while($row = pg_fetch_assoc($query)) {
@@ -187,7 +187,27 @@ while($row = pg_fetch_assoc($query)) {
                                  title="Porcentaje de comisi&oacute;n individual"
                                  onkeypress="validaNum(event);">
                           <span class="fa fa-percent form-control-feedback right" aria-hidden="true"></span>
-                        </div>                         
+                        </div>
+                       <label class="control-label col-md-2 col-sm-2 col-xs-12" for="campaign">
+                          Asignar Campa&ntilde;a
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12">
+                          <select id="campaign" class="form-control" name="campaign">
+                            <option value="0">Seleccione...</option>
+<?php
+//-- Campañas
+$sql = "SELECT id, descripcion FROM campaign
+        WHERE id>0
+           AND estado = 1
+           AND ( fin ISNULL OR (NOW() BETWEEN inicio AND fin ) )
+        ORDER BY descripcion";
+$query = pg_query($conn, $sql);
+while($row = pg_fetch_assoc($query)) {
+  print "<option value=\"{$row['id']}\">{$row['descripcion']}</option>";
+}
+?>
+                          </select>                          
+                        </div>                          
                       </div>                      
                       <br />
                       <h2>Datos de Acceso</h2>
@@ -361,9 +381,11 @@ include('includes/dash-footer.php');
       $("#cargo").children().attr('selected', false);
       $("#nivel").children().attr('selected', false);
       $("#sucursal").children().attr('selected', false);
+      $("#campaign").children().attr('selected', false);
       $("#cargo").val('0');
       $("#nivel").val('0');
-      $("#sucursal").val('0');      
+      $("#sucursal").val('0');
+      $("#campaign").val('0');
       $('#frm-cliente').parsley().reset();
       $("div").removeClass("checked");
       if(SalvarNuevo === 0)
@@ -402,7 +424,8 @@ include('includes/dash-footer.php');
             'clave'      : document.getElementById("clave").value,
             'pwd'        : document.getElementById("pwd-usr").value,
             'idejecutivo': document.getElementById("idejecutivo").value,
-            'supervisor' : document.getElementById("supervisor").value
+            'supervisor' : document.getElementById("supervisor").value,
+            'campaign'   : document.getElementById("campaign").value
             },
         /* Colocar respuesta del script php en el marco DIV indicado */
         success:
