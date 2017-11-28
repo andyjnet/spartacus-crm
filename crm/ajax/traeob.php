@@ -156,7 +156,8 @@ switch($objeto) {
                     ccon.codigo AS condominio,
                     p.cuota, p.comision_corredor AS comision, p.idforma_pago,
                     p.comision AS comision_usuario,
-                    p.deducible, p.idcompania
+                    p.deducible, p.idcompania,
+                    p.idcampaign
                 FROM cotizacion p
                     INNER JOIN clientes c ON(p.idcliente = c.id)
                     INNER JOIN ramos r ON(p.idramo = r.id)
@@ -199,6 +200,7 @@ switch($objeto) {
             $("#producto").children().attr('selected', false);
             $("#forma-pago").children().attr('selected', false);
             $("#cia").children().attr('selected', false);
+            $("#campaign").children().attr('selected', false);
             
             $("#etapa").children('[value="<?php print $fila['idetapa'] ?>"]').attr('selected', true);
             $("#sucursal").children('[value="<?php print $fila['idsucursal'] ?>"]').attr('selected', true);
@@ -208,6 +210,7 @@ switch($objeto) {
             $("#producto").children('[value="<?php print $fila['idproducto'] ?>"]').attr('selected', true);
             $("#forma-pago").children('[value="<?php print $fila['idforma_pago'] ?>"]').attr('selected', true);
             $("#cia").children('[value="<?php print $fila['idcompania'] ?>"]').attr('selected', true);
+            $("#campaign").children('[value="<?php print $fila['idcampaign'] ?>"]').attr('selected', true);
             
             $("#etapa").val('<?php print $fila['idetapa'] ?>');
             $("#sucursal").val('<?php print $fila['idsucursal'] ?>');
@@ -217,6 +220,7 @@ switch($objeto) {
             $("#producto").val('<?php print $fila['idproducto'] ?>');
             $("#forma-pago").val('<?php print $fila['idforma_pago'] ?>');
             $("#cia").val('<?php print $fila['idcompania'] ?>');
+            $("#campaign").val('<?php print $fila['idcampaign'] ?>');
             
             if(tipoRamo == 1)
                 $("#vehiculo").show();

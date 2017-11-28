@@ -17,7 +17,7 @@ if(file_exists('../includes/tools.php'))
 	
 //-- Verificar permisos sobre etapas
 $usr_permisos = $_SESSION['permisos'] ?? '';
-$id_campaign = $_SESSION['campaign'] ?? 0;
+//$id_campaign = $_SESSION['campaign'] ?? 0;
 $usr_etapas   = '';
 $usr_cotizaciones = '';
 if($usr_permisos && !$usr_admin) {
@@ -112,6 +112,7 @@ $poliza	 		 = isset($_POST['poliza'])?$_POST['poliza']:'';
 $forma_pago		 = isset($_POST['forma-pago'])?$_POST['forma-pago']:0;
 $deducible		 = isset($_POST['deducible'])?$_POST['deducible']:'';
 $idcompania		 = isset($_POST['cia'])?$_POST['cia']:0;
+$id_campaign	 = isset($_POST['campaign'])?$_POST['campaign']:0;
 
 $comision_usuario = 0;
 if($ejecutivo) {
@@ -183,12 +184,12 @@ if($rut && !$idcotizacion) {
 				siniestros,prima_actual,vigencia,renovacion, prima_neta, cuota,
 				monto_asegurado,comision_corredor,observacion,
 				poliza,idetapa,idusuario, idproducto,
-				deducible, idforma_pago, idcompania)
+				deducible, idforma_pago, idcompania, idcampaign)
 			VALUES ($idcliente,$sucursal,$corredor,$ramo,$ejecutivo,
 				$siniestros,$prima,'$vigencia'::text::date,'$renovacion'::text::date,$prima_neta, $cuota,
 				$monto_asegurado, $comision, '$comentarios'::text,
 				'$poliza',$etapa, $idusuario, $producto,
-				'$deducible', $forma_pago, $idcompania)
+				'$deducible', $forma_pago, $idcompania, $id_campaign)
 			RETURNING id;";
 	$texto  = "creado";
 	$texto2 = "crear";
@@ -218,6 +219,7 @@ if($rut && !$idcotizacion) {
 				,deducible = '$deducible'
 				,idforma_pago = $forma_pago
 				,idcompania = $idcompania
+				,idcampaign = $id_campaign
 			WHERE id = $idcotizacion
 			RETURNING id";
 	$texto  = "actualizado";

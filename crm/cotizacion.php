@@ -513,6 +513,20 @@ while($row = pg_fetch_assoc($query)) {
 $str_bloqueo = '';
 if($id_sup_usr)
   $str_bloqueo = 'readonly="readonly"';
+/* Verificamos que exista alguna campaña Activa */
+$sql     = "SELECT id, descripcion
+            FROM campaign
+            WHERE id>0
+               AND estado = 1
+               AND ( fin ISNULL OR (NOW() BETWEEN inicio AND fin ) )
+            ORDER BY descripcion";
+$qCamp   = pg_query($sql);
+$hayCamp = (pg_numrows($qCamp)>0) ? 1 : 0;
+if($hayCamp) {
+   $cols = 4;
+} else {
+   $cols = 10;
+}
 ?>
                           </select>   
                         </div>
@@ -580,7 +594,7 @@ if($id_sup_usr)
                         <label class="control-label col-md-2 col-sm-2 col-xs-12" for="cia">
                           Compa&ntilde;ia 
                         </label>
-                        <div class="col-md-10 col-sm-10 col-xs-12">
+                        <div class="col-md-<?php print $cols ?> col-sm-<?php print $cols ?> col-xs-12">
                           <select id="cia" name="cia" class="form-control">
                             <option value="0">Seleccione...</option>
 <?php
@@ -595,7 +609,30 @@ while($row = pg_fetch_assoc($query)) {
 }
 ?>
                           </select>                          
-                        </div>                         
+                        </div>
+<?php
+print '<input type="hidden" id="hay-campaign" value="'.$hayCamp.'">';
+if($hayCamp) {
+?>
+                        <label class="control-label col-md-2 col-sm-2 col-xs-12" for="campaign">
+                          Asignar Campa&ntilde;a
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12">
+                           <select id="campaign" name="campaign" class="form-control">
+<?php
+$camSel = (@pg_numrows($qCamp) == 1) ? " selected" : "";
+if(!$camSel) {
+   print '<option value="0">Seleccione...</option>';
+}
+while($op = pg_fetch_assoc($qCamp)) {
+   print "<option value=\"{$op['id']}\"$camSel>{$op['descripcion']}</option>";
+}
+?>
+                           </select>
+                        </div>
+<?php
+}
+?>
                       </div>
                       
                       <div class="form-group">
@@ -1024,6 +1061,7 @@ if($cid) {
     var ePoliza = false;
     var el2 = $("#adjunto-file").parsley();
     var el3 = $("#poliza").parsley();
+    var el4 = $("#campaign").parsley();
     if (typeof paramGuardarNuevo === 'undefined') paramGuardarNuevo = 0;
     SalvarNuevo = paramGuardarNuevo;
     if(api.getFiles().length === 0) {
@@ -1048,6 +1086,14 @@ if($cid) {
       el3.addError('forcederror', {message: 'La poliza es requerida en esta etapa'});
       return false;
     }    
+    if( $("#hay-campaign").val() == "1" ) {
+      el4.removeError('forcederror', {updateClass: true});
+      $(el4.ulError).empty();
+      if($("#campaign").val() === "0") {
+         el4.addError('forcederror', {message: 'Debe seleccionar una campaña'});
+         return false;         
+      }
+    }
     
     if(ruta.checkValidity()) {
       $('#modConfirma').modal({backdrop: "static"});
