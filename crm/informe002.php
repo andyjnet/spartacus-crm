@@ -9,11 +9,19 @@ if(isset($_POST['fecha1'])) {
     $hasta = $_POST['fecha2'];
 }
 
+$usr_permisos = $_SESSION['permisos'] ?? '';
+
 $sWhere = "";
 $dis = "";
-if(!$usr_admin) {
+
+$sqlFiltro = "";
+$verInforme = comprueba($usr_permisos, "29");
+
+if(!$usr_admin && !$verInforme) {
     $ide = $idusuario;
     $dis = ' disabled = "disabled" ';
+} elseif (!$usr_admin && $verInforme) {
+    $sqlFiltro = " AND (idsupervisor = $idusuario OR id=$idusuario) ";
 }
 if($ide) {
     $sWhere = " AND c.idejecutivo = $ide ";
@@ -48,8 +56,9 @@ $sWhere .= " AND c.estado > -1 ";
 <?php
 $sql = "SELECT id, CONCAT(nombre, ' ', apellidos) AS descripcion
       FROM usuarios
-      WHERE estado=1
+      WHERE estado = 1
         AND idcargo > 0
+        $sqlFiltro
       ORDER BY nombre, apellidos";
 $query = pg_query($conn, $sql);
 $sel = (pg_numrows($query) == 1)?" selected":"";

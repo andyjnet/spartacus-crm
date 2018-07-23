@@ -41,7 +41,8 @@ $sql = "SELECT c.idetapa,
         FROM cotizacion c
           INNER JOIN usuarios u ON(c.idejecutivo = u.id)
         WHERE idetapa IN(44, 46)
-          AND (idejecutivo = $idusuario OR $usr_admin = 1 OR u.idsupervisor = $idusuario)
+          AND c.estado > -1
+          AND (c.idejecutivo = $idusuario OR $usr_admin = 1 OR u.idsupervisor = $idusuario)
         GROUP BY idetapa";
 $query = pg_query($conn, $sql);
 $sum_enviado    = 0;
@@ -73,7 +74,7 @@ if($usr_permisos && !$usr_admin) {
   }
   if($sql_etapas) {
     $sql_etapas = substr($sql_etapas, 0, strlen($sql_etapas) - 1);
-    $sql_etapas = " OR c.idetapa IN($sql_etapas) ";
+    $sql_etapas = " OR (c.idetapa IN($sql_etapas) AND c.estado > -1) ";
   } 
 } else {
   $access = array("");
@@ -100,7 +101,7 @@ $sql = "SELECT t.total,
             AND (c.idejecutivo = $idusuario OR $usr_admin = 1 OR u.idsupervisor = $idusuario)
             $sql_campaign
             $sql_etapas
-        ) AS t";
+        ) AS t"; 
 $query = pg_query($conn, $sql);
 if($row = pg_fetch_assoc($query)) {
   $total_cotizacion = $row['total'];

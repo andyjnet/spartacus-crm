@@ -91,6 +91,13 @@ while($row = pg_fetch_assoc($query)) {
                                 </ol>
                             </li>
                             <li>
+                                <input id="chkmenu0501" type="checkbox" value="-4" /> Informes
+                                <ol>
+                                    <li><input id="chkmenu0502" type="checkbox" value='28' /> Gesti&oacute;n</li>
+                                    <li><input id="chkmenu0503" type="checkbox" value='29' /> Comisiones</li>
+                                </ol>
+                            </li>
+                            <li>
                                 <input id="chkmenu0300" type='checkbox' value='-3' /> Tablas de Valores
                                 <ol>
                                   <li><input id="chkmenu0301" type="checkbox" value='13' /> Cargos</li>

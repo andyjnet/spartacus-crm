@@ -140,11 +140,17 @@ if(isset($str_bien)) {
 	pg_query($conn, "ROLLBACK");
 }
 
+//-- Filtro de clientes segun perfil
+$filtro = '';
+if(!$usr_admin && !comprueba($usr_permisos, "2")) {
+	$filtro = " AND (c.idejecutivo = $idusuario OR c.idusuario = $idusuario) ";
+} 
 $sql = "SELECT c.id, REPLACE(c.rut,'.','') AS rut, c.nombre,
 			cc.telefono, cc.movil, cc.email
 		FROM clientes c
 			LEFT JOIN clientes_contactos cc ON(cc.idcliente = c.id)
 		WHERE c.idestado > -1
+		$filtro
 		ORDER BY c.nombre, rut";
 $query = pg_query($conn, $sql);
 ?>
