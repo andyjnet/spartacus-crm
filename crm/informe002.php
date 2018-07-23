@@ -17,7 +17,8 @@ if(!$usr_admin) {
 }
 if($ide) {
     $sWhere = " AND c.idejecutivo = $ide ";
-} 
+}
+$sWhere .= " AND c.estado > -1 ";
 ?>
 <!-- Contenido de la página -->
 <div class="right_col" role="main">
@@ -124,6 +125,7 @@ $hasta = $hasta ?? $mes_fin->format('d/m/Y');
 $fecha1 = "'".substr($desde, 6, 4).'-'.substr($desde, 3, 2).'-'.substr($desde, 0, 2)."'";
 $fecha2 = "'".substr($hasta, 6, 4).'-'.substr($hasta, 3, 2).'-'.substr($hasta, 0, 2)."'";
 $sWhere .= " AND c.vigencia BETWEEN $fecha1 AND $fecha2 ";
+/**** SQL Con descuento CSA
 $sql = "SELECT c.poliza, cl.nombre,
             TO_CHAR(c.vigencia, 'DD/MM/YYYY') AS vigencia, 
             c.prima_actual AS pbruta,
@@ -140,6 +142,22 @@ $sql = "SELECT c.poliza, cl.nombre,
         WHERE c.idetapa = 48
         $sWhere
         ORDER BY c.vigencia::date";
+****/
+$sql = "SELECT c.poliza, cl.nombre,
+            TO_CHAR(c.vigencia, 'DD/MM/YYYY') AS vigencia, 
+            c.prima_actual AS pbruta,
+            c.prima_neta * 0.19 AS iva,
+            c.prima_neta,
+            c.comision_corredor::numeric(5,2) AS comision_corredor,
+            (c.prima_neta * comision_corredor/100)::numeric(14,3) AS monto_comision,
+            (c.prima_neta * comision_corredor/100)::numeric(14,3) AS a_comision,
+            c.comision::integer AS intermediacion,
+            (c.prima_neta * comision_corredor/100 * (c.comision/100))::numeric(14,2) AS remuneracion
+        FROM cotizacion c
+            INNER JOIN clientes cl ON(c.idcliente = cl.id)
+        WHERE c.idetapa = 48
+        $sWhere
+        ORDER BY c.vigencia::date";        
 $query = pg_query($sql);
 ?>              
               <div class="x_content">
@@ -155,7 +173,7 @@ $query = pg_query($sql);
                         <th class="column-title text-left">P.Neta </th>
                         <th class="column-title text-left">% Com. </th>
                         <th class="column-title text-left">Monto </th>
-                        <th class="column-title text-left">Dsto.CSA </th>
+                        <!-- <th class="column-title text-left">Dsto.CSA </th> -->
                         <th class="column-title text-left">A Com. </th>
                         <th class="column-title text-left">% Inter. </th>
                         <th class="column-title no-link last text-center"><span class="nobr">$ Com.</span>
@@ -189,7 +207,7 @@ while($fila = pg_fetch_assoc($query)) {
       <td class=" text-right"><?php print $fila['prima_neta'] ?></td>
       <td class=" text-right"><?php print $fila['comision_corredor'] ?></td>
       <td class=" text-right"><?php print $fila['monto_comision'] ?></td>
-      <td class=" text-right" style="color: red"><?php print $fila['csa'] ?></td>
+      <!-- <td class=" text-right" style="color: red"><?php /* print $fila['csa'] */ ?></td> -->
       <td class=" text-right"><strong><?php print $fila['a_comision'] ?></strong></td>
       <td class=" text-right"><?php print $fila['intermediacion'] ?></td>
       <td class=" last text-right" style="color: green"><strong><?php print $fila['remuneracion'] ?></strong></td>
@@ -199,7 +217,7 @@ while($fila = pg_fetch_assoc($query)) {
     $tiva   += $fila['iva'];
     $tneta  += $fila['prima_neta'];
     $tmonto += $fila['monto_comision'];
-    $tcsa   += $fila['csa'];
+    // $tcsa   += $fila['csa'];
     $acom   += $fila['a_comision'];
     $total  += $fila['remuneracion'];
 }
@@ -215,7 +233,7 @@ if($tbruta || $tneta || $total) {
       <td class=" text-right"><strong><?php print number_format($tneta,2,",",".") ?></strong></td>
       <td class=" text-right">&nbsp;</td>
       <td class=" text-right"><strong><?php print number_format($tmonto,3,",",".") ?></strong></td>
-      <td class=" text-right"><strong><?php print number_format($tcsa,3,",",".") ?></strong></td>
+      <!-- <td class=" text-right"><strong><?php print number_format($tcsa,3,",",".") ?></strong></td> -->
       <td class=" text-right"><strong><?php print number_format($acom,3,",",".") ?></strong></td>
       <td class=" last text-right" style="color: green" colspan="2"><strong><?php print number_format($total,2,",",".") ?></strong></td>
     </tr>

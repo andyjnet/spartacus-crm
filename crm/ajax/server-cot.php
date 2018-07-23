@@ -193,7 +193,7 @@
 			INNER JOIN usuarios u ON(p.idejecutivo = u.id)
 			LEFT JOIN clientes_contactos cc ON(cc.idcliente = c.id)
 			LEFT JOIN cotizacion_vehiculos cv ON(cv.idcotizacion = p.id)
-			WHERE p.id>0
+			WHERE p.id>0 AND p.estado > -1
 				$sWhere
 				AND ( $usr_admin = 1 $usr_cotizaciones $usr_etapas OR u.idsupervisor = $idusuario)
 				$sql_campaign
@@ -219,7 +219,7 @@
 	$sQuery = "
 		SELECT count(*) AS total_records
 		FROM cotizacion p
-		WHERE p.id>0
+		WHERE p.id>0 AND p.estado > -1
 		AND ( $usr_admin=1 OR p.idejecutivo = $idusuario)
 		$usr_etapas
 		$sql_campaign

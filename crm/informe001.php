@@ -9,6 +9,7 @@ if($ide) {
 } else {
     $sWhere = " WHERE 1=1 ";
 }
+$sWhere .= " AND c.estado > -1 ";
 ?>
 <!-- Contenido de la página -->
 <div class="right_col" role="main">

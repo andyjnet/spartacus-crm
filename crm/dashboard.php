@@ -96,7 +96,7 @@ $sql = "SELECT t.total,
             ) AS semana
           FROM cotizacion c
             INNER JOIN usuarios u ON(c.idejecutivo = u.id)
-          WHERE c.id>0
+          WHERE c.id>0 and c.estado > -1
             AND (c.idejecutivo = $idusuario OR $usr_admin = 1 OR u.idsupervisor = $idusuario)
             $sql_campaign
             $sql_etapas
@@ -185,9 +185,10 @@ $sql = "SELECT e.descripcion AS etapa, COUNT(*) AS cantidad
         FROM cotizacion c
           INNER JOIN etapas_venta e ON(c.idetapa=e.id)
           INNER JOIN usuarios u ON(c.idejecutivo = u.id)
-        WHERE (c.idejecutivo = $idusuario
-          OR $usr_admin = 1
-          OR u.idsupervisor = $idusuario)
+        WHERE c.estado > -1
+          AND (c.idejecutivo = $idusuario
+            OR $usr_admin = 1
+            OR u.idsupervisor = $idusuario)
           $sql_campaign
           $sql_etapas
         GROUP BY e.descripcion, e.orden

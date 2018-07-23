@@ -61,7 +61,7 @@ if($rut && $nombre && !$idcliente) {
 	//-- Scripts para crear cliente nuevo
 	$sql = "INSERT INTO clientes(idorigen, idejecutivo, tipo, rut, nombre, nombre_fantasia, comentarios, idestado, idusuario)
 			SELECT 0, $ejecutivo, '$tipo', '$rut', '$nombre', '$fantasia','$comentarios', $estado, $idusuario
-			WHERE NOT EXISTS(SELECT id FROM clientes WHERE rut='$rut')
+			WHERE NOT EXISTS(SELECT id FROM clientes WHERE REPLACE(rut,'.','') = REPLACE('$rut','.',''))
 			RETURNING id";
 	$texto  = "creado";
 	$texto2 = "crear";
@@ -110,7 +110,24 @@ if($sw) {
 		if(@pg_last_error($tran)) {
 			$str_error="Servidor de base de datos ha retornado un error, intente mas tarde";
 		} else {
-			$str_error = "Parece que ya existe el Rut que intenta $texto2";
+			// --> bof proceso de reactivacion de cliente
+			$sql = "SELECT id FROM clientes WHERE REPLACE(rut,'.','') = REPLACE('$rut','.','') AND idestado = -1";
+			$query = pg_query($conn, $sql);
+			if($fila = pg_fetch_assoc($query)) {
+			  // --> Caso particular, si el cliente existe pero estaba oculto
+			  $id = $fila['id'];
+			  $sql = "UPDATE clientes SET idestado = 1, fecha_mod=CURRENT_DATE, idusuario_mod = $idusuario WHERE id=$id";
+			  if(!$query = pg_query($conn, $sql)) {
+				$str_error = "No se pudo reactivar el cliente, favor notifique a departamento TI";
+				glog($idusuario, $usr_nombre, 'cliente', "Error intentando reactivar cliente ID [$id] Nombre [$nombre] RUT [$rut] Ejecutivo [$ejecutivo]");
+			  } else {
+				$str_bien = "$nombre se ha Reactivado correctamente!";
+			  }
+	        // <-- eof (si se descarta este bloque hay que tomar en cuenta las siguientes llaves del if)
+			} else {
+			  // --> Procedimiento normal, creando cliente que ya existe
+			  $str_error = "Parece que ya existe el Rut que intenta $texto2";
+			}
 		}
 	}
 }
@@ -123,11 +140,12 @@ if(isset($str_bien)) {
 	pg_query($conn, "ROLLBACK");
 }
 
-$sql = "SELECT c.id, c.rut, c.nombre,
+$sql = "SELECT c.id, REPLACE(c.rut,'.','') AS rut, c.nombre,
 			cc.telefono, cc.movil, cc.email
 		FROM clientes c
 			LEFT JOIN clientes_contactos cc ON(cc.idcliente = c.id)
-		ORDER BY c.nombre, c.rut";
+		WHERE c.idestado > -1
+		ORDER BY c.nombre, rut";
 $query = pg_query($conn, $sql);
 ?>
 <div class="table-responsive">
